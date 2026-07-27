@@ -37,24 +37,60 @@ dir.create(folderDataLocal)
 
 totDF <- readRDS(file = paste0(folderDataLocal, "/Abundance_ElDorado_Sepulveda.rds"))
 
+# These are test for the disease: therefore rows are repeated for each sample. Le
+
+totDFmod <- totDF %>%
+  group_by(pool_id, trap_type, site_code, collection_date, species, sex, sex_condition) %>%
+  summarise(num_count = mean(num_count)) %>% 
+  ungroup()
+
+# if they belong to the same pool id, it means that they are the same mosquito that are tested over only multiple diseases.
+# however, if they belong to different pool id, it means that they are different mosquitos - there fore they should be summed.
+
+totDFmod <- totDF %>%
+  group_by(trap_type, site_code, collection_date, species, sex, sex_condition) %>%
+  summarise(num_count = sum(num_count)) %>% 
+  ungroup()
+# This need to be checked
+
+summary(totDFmod$num_count) # There are never 0: is this normal?
+
+# check #1: there should be only one trap/date/species/sex. Is it so?
+totDFmod$colchk = paste0(totDFmod$trap_type, "_", totDFmod$site_code, "_", totDFmod$collection_date, "_", totDFmod$species, "_", totDFmod$sex_condition)
+-sort(-table(totDFmod$colchk))[1]
+
+x = totDFmod %>% filter(site_code == "2278",
+                        collection_date == "2008-07-17",
+                        species == "Culex quinquefasciatus",
+                        sex_condition == "Females - Mixed")
+
+x0 = totDF %>% filter(site_code == "2278",
+                      collection_date == "2008-07-17",
+                      species == "Culex quinquefasciatus",
+                      sex_condition == "Females - Mixed")
+
+# ok ther are no more duplicated lines
+saveRDS(totDFmod, file = paste0(folderDataLocal, "/totDFmod_ElDorado_Sepulveda.rds"))
+totDFmod <- readRDS(file = paste0(folderDataLocal, "/totDFmod_ElDorado_Sepulveda.rds"))
+
 # Variables definition ----
 
 species = unique(totDF$species)
 sites = unique(totDF$site_code)
 traps = unique(totDF$trap_type)
 
-# let's plot the actovity period for each trap (in months)
+# let's plot the actovity period for each trap (in weeks)
 year_start = year(min(totDF$collection_date))
 year_end = year(max(totDF$collection_date))
 
-years = rep(year_start:year_end, each = 12)
-months = rep(1:12, times = length(year_start:year_end))
+years = rep(year_start:year_end, each = 52)
+weeks = rep(1:52, times = length(year_start:year_end))
 
 # Dataframe of presences ----
 
-sitesDF = data.frame(site = as.factor(rep(sites, times = length(months))),
+sitesDF = data.frame(site = as.factor(rep(sites, times = length(weeks))),
                      year = rep(years, each = length(sites)),
-                     month = rep(months, each = length(sites)),
+                     week = rep(weeks, each = length(sites)),
                      active = 0,
                      area = NA,
                      quinquefasciatus = 0,
@@ -65,8 +101,9 @@ sitesDF = data.frame(site = as.factor(rep(sites, times = length(months))),
 ## Filling ----
 # not the fastyest way, but: 
 
+tic()
 for(i in 1:nrow(totDF)){
-  mi = month(totDF$collection_date[i])
+  mi = week(totDF$collection_date[i])
   yi = year(totDF$collection_date[i])
   si = totDF$site_code[i]
   ai = totDF$area[i]
@@ -75,22 +112,23 @@ for(i in 1:nrow(totDF)){
   stigmatosomai = (totDF$species[i] == "Culex stigmatosoma")
   aegyptii = (totDF$species[i] == "Aedes aegypti")
   
-  r = which(sitesDF$year == yi & sitesDF$month == mi & sitesDF$site == si)
+  r = which(sitesDF$year == yi & sitesDF$week == mi & sitesDF$site == si)
   
   sitesDF$active[r] = 1
   sitesDF$area[r] = ai
-  sitesDF$quinquefasciatus[r] = pmax(sitesDF$quinquefasciatus[r], quinquefasciatusi)
-  sitesDF$tarsalis[r] = pmax(sitesDF$tarsalis[r],tarsalisi)
-  sitesDF$stigmatosoma[r] = pmax(sitesDF$stigmatosoma[r], stigmatosomai)
-  sitesDF$aegypti[r]= pmax(sitesDF$aegypti[r], aegyptii)
+  sitesDF$quinquefasciatus[r] = sitesDF$quinquefasciatus[r] + quinquefasciatusi
+  sitesDF$tarsalis[r] = sitesDF$tarsalis[r] + tarsalisi
+  sitesDF$stigmatosoma[r] =  sitesDF$stigmatosoma[r] + stigmatosomai
+  sitesDF$aegypti[r]= sitesDF$aegypti[r] + aegyptii
 }
+toc() #26-31 sec
 
 # Image preprocessing
 
 sitesDF <- sitesDF %>%
   filter(!is.na(area))
 
-sitesDF$progYear = round(sitesDF$month/12 + sitesDF$year,2)
+sitesDF$progYear = round(sitesDF$week/52 + sitesDF$year,2)
 
 # Plot ----
 
@@ -99,26 +137,32 @@ sitesDF$progYear = round(sitesDF$month/12 + sitesDF$year,2)
 ggplot(data = sitesDF, aes(x = progYear, y = site, fill = active))+
   geom_tile()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "none")+
-  facet_wrap(.~area, scales = "free_y")+
+        legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  facet_wrap(.~area, scales = "free_y", space = "free_y")+
   ggtitle("Active surveillance")
 
 ## Ae. aegypti----
 
 ggplot(data = sitesDF, aes(x = progYear, y = site, fill = aegypti))+
   geom_tile()+
+  scale_fill_viridis_c(option = "D", direction = -1)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "none")+
-  facet_wrap(.~area, scales = "free_y")+
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  facet_wrap(.~area, scales = "free_y", space = "free_y")+
   ggtitle("Detection of Ae. aegypti")
 
 ## C. quinquefasciatus----
  
 ggplot(data = sitesDF, aes(x = progYear, y = site, fill = quinquefasciatus))+
   geom_tile()+
+  scale_fill_viridis_c(option = "D", direction = -1)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "none")+
-  facet_wrap(.~area, scales = "free_y")+
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  facet_wrap(.~area, scales = "free_y", space = "free_y")+
   ggtitle("Detection of C. quinquefasciatus")
 
 ## Plot of 1 trajectory ----
@@ -128,7 +172,7 @@ ggplot(data = sitesDF, aes(x = progYear, y = site, fill = quinquefasciatus))+
 # species = Culex quinquefasciatus
 # site = 2800
 
-ggplot(data = totDF %>%
+ggplot(data = totDFmod %>%
          filter(site_code == 2655,
                 species == "Culex quinquefasciatus"),
        aes(x = collection_date,
@@ -137,52 +181,20 @@ ggplot(data = totDF %>%
 
 # what does it mean "50"? 
 
-hist(totDF$num_count)
+hist(totDFmod$num_count)
 
+save(sitesDF, file = paste0(folderDataLocal, "/sitesDF_ElDorado_Sepulveda.rds"))
 
-
-# can I compute diversity indices by month (how can I do that? Max abundance is limited to 50...)
-
-# Detection delay
-
-correct_date_detection = (sitesDF %>%
-  filter(aegypti > 0) %>%
-  filter(progYear == min(progYear)) %>%
-  pull(progYear))[1]
-
-# delay with 3 site less
-date_detection = c()
-
-tic()
-for(i in 1:length(sites)){
-  s1 = sites[i]
-  sites1 = sites[-i]
-  for(j in 1:length(sites1)){
-    s2 = sites1[j]
-    sites2 = sites1[-j]
-    for(k in 1:length(sites2)){
-      s3 = sites2[k]
-      sites3 = sites1[-k]
-      
-      tempsitesDF = sitesDF %>%
-        filter(site %in% sites3)
-      
-      date_detection = c(date_detection, (tempsitesDF %>%
-                                            filter(aegypti > 0) %>%
-                                            filter(progYear == min(progYear)) %>%
-                                            pull(progYear))[1])
-    }
-  }
-}
-toc() # quite long
-
-m_delays = 12*(date_detection-correct_date_detection)
-
-summary(m_delays)
+# can I compute diversity indices by week (how can I do that? Max abundance is limited to 50...)
 
 # DOUBTS
 # why are abundance data limited to 50? At least they look so
 # is "collection_date" the starting date of sampling and "add_date" the ending date? 
 # is it possible to have daily weather series (min temp, max temp, avg temp, cum rain, relativ humidity) for the 4 sites?
+# What is NA trap? 
+# why not zeros? Are these line sdeleted or just by channe? 
 
-
+#With Mathilde
+# is week a good scale? Waht abouth month?
+# should indicators be diffeerent depending on traps?
+# how to compute biodiversity indices depending on different traps?
