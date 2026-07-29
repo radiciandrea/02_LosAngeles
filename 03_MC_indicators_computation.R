@@ -21,6 +21,9 @@ correctDateDetection = (sitesDF %>%
                           filter(progYear == min(progYear)) %>%
                           pull(progYear))[1]
 
+# to add: also mosquito detection ratio 
+# (number of iterations when mosquito delay is below a given ration, such as 1 year)
+
 # Trend quiquefaciatus
 correctTrend = sitesDF %>%
   group_by(progYear) %>%
@@ -29,8 +32,8 @@ correctTrend = sitesDF %>%
 
 # Alpha diversity: Shannon index (is already normalized. Here we consider tyhe whole time series
 
-pV = c(sum(sitesDF$quinquefasciatus), sum(sitesDF$tarsalis), sum(sitesDF$stigmatosoma), sum(sitesDF$aegypti))
-pV = pV/sum(pV)
+nV = c(sum(sitesDF$quinquefasciatus), sum(sitesDF$tarsalis), sum(sitesDF$stigmatosoma), sum(sitesDF$aegypti))
+pV = nV/sum(nV)
 correctShannon = - sum(pV*log2(pV))
 
 # beta diversity: like if there were two different sites.
@@ -44,6 +47,8 @@ correctShannon = - sum(pV*log2(pV))
 # https://medium.com/@vibhorkashyap/understanding-jensen-shannon-distance-a-friendly-guide-for-data-scientists-4cac664c3381
 # article for biodiversity in gut microbiome
 # https://pmc.ncbi.nlm.nih.gov/articles/PMC10628149/
+
+# Test on categorical distribution (to rethink)
 
 # Exhaustively (too long) ---
 # # delay with 3 site less mechansitc one: very long.
@@ -80,14 +85,15 @@ correctShannon = - sum(pV*log2(pV))
 
 # e.g., time we remove 1 < n < n_sites = 36
 nSites = length(sites)-1
-nRep = 1000
+nRep = 10000
 
 indicatorDF = data.frame(idrep = rep(1:nRep, nSites),
                       nRemSites = rep(1:nSites, each = nRep),
                       delay = NA,
                       spearmanR = NA,
                       shannon = NA,
-                      jensenShannon = NA)
+                      jensenShannon = NA,
+                      pvalCategorical = NA)
 
 tic()
 for(n in 1:nSites){
@@ -128,10 +134,12 @@ for(n in 1:nSites){
     }
     
     weeksDelay = 52*(dateDetection-correctDateDetection)
+  
     
     # Alpha biodiversity ---- 
-    pVi = c(sum(tempSitesDF$quinquefasciatus), sum(tempSitesDF$tarsalis), sum(tempSitesDF$stigmatosoma), sum(tempSitesDF$aegypti))
-    pVi = pVi/sum(pVi)
+    nVi = c(sum(tempSitesDF$quinquefasciatus), sum(tempSitesDF$tarsalis), sum(tempSitesDF$stigmatosoma), sum(tempSitesDF$aegypti))
+    N = sum(nVi) 
+    pVi = nVi/N
     tempShannon = - sum(pVi*log2(pVi))
     
     # Beta biodiversity ---- 
@@ -140,24 +148,32 @@ for(n in 1:nSites){
     KLD_QP = sum(ifelse(pVi >0, pVi*log(pVi/M), 0)) # Kullback–Leibler divergence, other side
     tempJensenShannon = 0.5*KLD_PQ + 0.5*KLD_QP
     
+    # # Pearson's chi-squared test over categorical variables (to think about)
+    # ChiSquared = sum((nVi - N*pV)^2/(N*pV))
+    # df = (N-1)*(length(pV)-1)
+    # temppvalCategorical = pchisq(ChiSquared, df)
+    
     # fill data frame
     indicatorDF$delay[(n-1)*nRep + r] = weeksDelay
     indicatorDF$spearmanR[(n-1)*nRep + r] = tempR 
     indicatorDF$shannon[(n-1)*nRep + r] = tempShannon 
     indicatorDF$jensenShannon[(n-1)*nRep + r] = tempJensenShannon
+    indicatorDF$pvalCategorical[(n-1)*nRep + r] = temppvalCategorical
     
   }
 }
-toc() # 4 per 10 sec, 34 sec per 100, 388 per 1000...
+toc() # 4 per 10 sec, 34 sec per 100, 388 per 1000, 7080 per 10000
 
 saveRDS(indicatorDF, file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
 
 # Plots ----
 
 plot(indicatorDF$nRemSites, indicatorDF$delay)
+plot(indicatorDF$nRemSites, indicatorDF$MDR)
 plot(indicatorDF$nRemSites, indicatorDF$spearmanR)
 plot(indicatorDF$nRemSites, indicatorDF$shannon)
 plot(indicatorDF$nRemSites, indicatorDF$jensenShannon)
+# plot(indicatorDF$nRemSites, indicatorDF$pvalCategorical)
 # to rethink delay (most)
 
 ## Plot delay ----
@@ -193,6 +209,27 @@ ggplot(data = indicatorDF, aes(x = nRemSites, y = delay, group = nRemSites)) +
     title = "Delay in the detection of Ae. aegypti",
     x = "Number of removed traps", y = "Delay (weeks)") 
 
+
+# MDR for aegypti: detectionw within...
+
+MDRDFmod <- indicatorDF %>%
+  group_by(nRemSites) %>%
+  summarise(no_delay = 100*sum(delay <= 1, na.rm = T)/nRep, # a month
+            within_season_delay = 100*sum(delay <= 13, na.rm = T)/nRep, # a season
+            within_year_delay = 100*sum(delay <= 52, na.rm = T)/nRep)%>% # a year
+  ungroup()
+
+MDRDFmodPV = pivot_longer(MDRDFmod, c("no_delay", "within_season_delay", "within_year_delay"), names_to = "delay", values_to = "mdr")
+
+ggplot(data = MDRDFmodPV, aes(x = nRemSites, y = mdr, color = delay)) +
+  geom_point()+
+  geom_line()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  labs(
+    title = "Ae. aegypti detection ratio",
+    x = "Number of removed traps", y = "% succesful surveillance")
 
 ## Plot quinquefaciatus trend ----
 # Spearman is ok but perhaps not informative on the overall dynamics
