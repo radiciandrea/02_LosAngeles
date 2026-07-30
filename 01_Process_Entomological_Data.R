@@ -48,7 +48,7 @@ totDFmod <- totDF %>%
   ungroup()
 
 # if they belong to the same pool id, it means that they are the same mosquito that are tested over only multiple diseases.
-# however, if they belong to different pool id, it means that they are different mosquitos - there fore they should be summed.
+# however, if they belong to different pool id, it means that they are different mosquitos - therefore they should be summed.
 
 totDFmod <- totDF %>%
   group_by(area, trap_type, site_code, collection_date, species, sex, sex_condition) %>%
