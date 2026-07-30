@@ -209,7 +209,7 @@ ggplot(data = indicatorDF, aes(x = nRemSites, y = delay, group = nRemSites)) +
     title = "Delay in the detection of Ae. aegypti",
     x = "Number of removed traps", y = "Delay (weeks)") 
 
-
+## Plot MDR----
 # MDR for aegypti: detectionw within...
 
 MDRDFmod <- indicatorDF %>%
@@ -266,6 +266,7 @@ ggplot(data = indicatorDF, aes(x = nRemSites, y = spearmanR, group = nRemSites))
     x = "Number of removed traps", y = "Spearman's rank r"
   ) 
 
+## Plot shannon ----
 # Alpha Biodiversity: what to take exactly?  shannon
 
 alphaBiodiversityDFmod <-  indicatorDF %>%
@@ -302,6 +303,7 @@ ggplot(data = indicatorDF, aes(x = nRemSites, y = shannon, group = nRemSites)) +
 
 # it just jingle aroundby increasing the variance
 
+## Plot jensen-Shannon ----
 # beta Biodiversity:  jensen
 
 betaBiodiversityDFmod <-  indicatorDF %>%
