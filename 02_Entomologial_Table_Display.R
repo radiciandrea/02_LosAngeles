@@ -2,6 +2,8 @@
 
 library(pracma)
 library(tidyverse)
+library(lubridate)
+library(ISOweek)
 
 folderDataLocal = "Data"
 
@@ -51,6 +53,8 @@ for(i in 1:nrow(totDFmod)){
   
   sitesDF$active[r] = 1
   sitesDF$area[r] = ai
+  
+  # species
   sitesDF$quinquefasciatus[r] = sitesDF$quinquefasciatus[r] + quinquefasciatusi
   sitesDF$tarsalis[r] = sitesDF$tarsalis[r] + tarsalisi
   sitesDF$stigmatosoma[r] =  sitesDF$stigmatosoma[r] + stigmatosomai
@@ -58,6 +62,9 @@ for(i in 1:nrow(totDFmod)){
 }
 toc() #9 sec
 
+sitesDF$progYear = :ISOweek2date(
+  sprintf("%d-W%02d-1", sitesDF$year, sitesDF$week)
+)
 
 # histogram of species
 histDF <- totDFmod %>%
@@ -74,8 +81,6 @@ ggplot(histDF, aes(x = species, y = tot))+
 
 sitesDF <- sitesDF %>%
   filter(!is.na(area))
-
-sitesDF$progYear = round(sitesDF$week/52 + sitesDF$year,2)
 
 # Plot ----
 
