@@ -1,38 +1,42 @@
-# Surveillance: compute surveillance degradation (delay)
+# Surveillance: compute surveillance degradation (reduced number of traps)
+# with MC approach
 
 library(pracma)
 library(tidyverse)
+library(lubridate)
 
 folderDataLocal = "Data"
+folderOutput = "Outputs"
 
 # load data
-totDFmod <- readRDS(file = paste0(folderDataLocal, "/totDFmod_ElDorado_Sepulveda.rds"))
-sitesDF <- readRDS(file = paste0(folderDataLocal, "/sitesDF_ElDorado_Sepulveda.rds"))
+totDFmod <- readRDS(file = paste0(folderDataLocal, "/totDFsel_ElDorado_Sepulveda.rds"))
+siteWeeksDF <- readRDS(file = paste0(folderDataLocal, "/siteWeeksDFsel_ElDorado_Sepulveda.rds"))
 
 # Recompute variables
-species = unique(totDFmod$species)
-sites = unique(totDFmod$site_code)
-traps = unique(totDFmod$trap_type)
+species = unique(totDFmod$Species)
+species = species[-which(is.na(species))]
+sites = unique(totDFmod$siteCode)
+#traps = unique(totDFmod$TrapType)
 
 # Benchmark definition ----
 # Detection delay
-correctDateDetection = (sitesDF %>%
+correctDateDetection = (siteWeeksDF %>%
                           filter(aegypti > 0) %>%
-                          filter(progYear == min(progYear)) %>%
-                          pull(progYear))[1]
+                          filter(datesLabels == min(datesLabels)) %>%
+                          pull(datesLabels))[1]
 
 # to add: also mosquito detection ratio 
 # (number of iterations when mosquito delay is below a given ration, such as 1 year)
 
 # Trend quiquefaciatus
-correctTrend = sitesDF %>%
-  group_by(progYear) %>%
+correctTrend = siteWeeksDF %>%
+  group_by(datesLabels) %>%
   summarise(mqf = mean(quinquefasciatus)) %>%
   ungroup()
 
 # Alpha diversity: Shannon index (is already normalized. Here we consider tyhe whole time series
 
-nV = c(sum(sitesDF$quinquefasciatus), sum(sitesDF$tarsalis), sum(sitesDF$stigmatosoma), sum(sitesDF$aegypti))
+nV = c(sum(siteWeeksDF$quinquefasciatus), sum(siteWeeksDF$tarsalis), sum(siteWeeksDF$stigmatosoma), sum(siteWeeksDF$aegypti))
 pV = nV/sum(nV)
 correctShannon = - sum(pV*log2(pV))
 
@@ -65,13 +69,13 @@ correctShannon = - sum(pV*log2(pV))
 #       s3 = sites2[k]
 #       sites3 = sites1[-k]
 # 
-#       tempSitesDF = sitesDF %>%
+#       tempsiteWeeksDF = siteWeeksDF %>%
 #         filter(site %in% sites3)
 # 
-#       dateDetection = c(dateDetection, (tempSitesDF %>%
+#       dateDetection = c(dateDetection, (tempsiteWeeksDF %>%
 #                                           filter(aegypti > 0) %>%
-#                                           filter(progYear == min(progYear)) %>%
-#                                           pull(progYear))[1])
+#                                           filter(datesLabels == min(datesLabels)) %>%
+#                                           pull(datesLabels))[1])
 #     }
 #   }
 # }
@@ -85,15 +89,14 @@ correctShannon = - sum(pV*log2(pV))
 
 # e.g., time we remove 1 < n < n_sites = 36
 nSites = length(sites)-1
-nRep = 10000
+nRep = 1000
 
 indicatorDF = data.frame(idrep = rep(1:nRep, nSites),
                       nRemSites = rep(1:nSites, each = nRep),
                       delay = NA,
                       spearmanR = NA,
                       shannon = NA,
-                      jensenShannon = NA,
-                      pvalCategorical = NA)
+                      jensenShannon = NA)
 
 tic()
 for(n in 1:nSites){
@@ -101,43 +104,42 @@ for(n in 1:nSites){
     idr = sample(1:nSites, n)
     sitesr = sites[-idr]
     
-    tempSitesDF = sitesDF %>%
+    tempsiteWeeksDF = siteWeeksDF %>%
       filter(site %in% sitesr)
     
     # trend ----
-    tempsitesQfDF = tempSitesDF %>%
+    tempsitesQfDF = tempsiteWeeksDF %>%
       filter(quinquefasciatus > 0)
     
     if(nrow(tempsitesQfDF)>0){
       tempsitesQfDF <- tempsitesQfDF%>%
-        group_by(progYear) %>%
+        group_by(datesLabels) %>%
         summarise(mqf = mean(quinquefasciatus)) %>%
         ungroup() 
       
-      commonProYears = correctTrend$progYear %in% tempsitesQfDF$progYear
+      commonProYears = correctTrend$datesLabels %in% tempsitesQfDF$datesLabels
       
-      tempR = cor(correctTrend %>% filter(progYear %in% tempsitesQfDF$progYear) %>% pull(mqf), tempsitesQfDF$mqf,  method = "spearman")
+      tempR = cor(correctTrend %>% filter(datesLabels %in% tempsitesQfDF$datesLabels) %>% pull(mqf), tempsitesQfDF$mqf,  method = "spearman")
     } else {
       tempR  = NA
     }
     
     # delay ----
-    tempsitesAegyptiDF = tempSitesDF %>%
+    tempsitesAegyptiDF = tempsiteWeeksDF %>%
       filter(aegypti > 0)
     
     if(nrow(tempsitesAegyptiDF) == 0){
       dateDetection = NA
     } else {
       dateDetection = (tempsitesAegyptiDF  %>%
-                         filter(progYear == min(progYear)) %>%
-                         pull(progYear)) [1]
+                         filter(datesLabels == min(datesLabels)) %>%
+                         pull(datesLabels)) [1]
     }
     
-    weeksDelay = 52*(dateDetection-correctDateDetection)
-  
+    weeksDelay = as.numeric((dateDetection-correctDateDetection)/7)
     
     # Alpha biodiversity ---- 
-    nVi = c(sum(tempSitesDF$quinquefasciatus), sum(tempSitesDF$tarsalis), sum(tempSitesDF$stigmatosoma), sum(tempSitesDF$aegypti))
+    nVi = c(sum(tempsiteWeeksDF$quinquefasciatus), sum(tempsiteWeeksDF$tarsalis), sum(tempsiteWeeksDF$stigmatosoma), sum(tempsiteWeeksDF$aegypti))
     N = sum(nVi) 
     pVi = nVi/N
     tempShannon = - sum(pVi*log2(pVi))
@@ -148,21 +150,16 @@ for(n in 1:nSites){
     KLD_QP = sum(ifelse(pVi >0, pVi*log(pVi/M), 0)) # Kullback–Leibler divergence, other side
     tempJensenShannon = 0.5*KLD_PQ + 0.5*KLD_QP
     
-    # # Pearson's chi-squared test over categorical variables (to think about)
-    # ChiSquared = sum((nVi - N*pV)^2/(N*pV))
-    # df = (N-1)*(length(pV)-1)
-    # temppvalCategorical = pchisq(ChiSquared, df)
-    
     # fill data frame
     indicatorDF$delay[(n-1)*nRep + r] = weeksDelay
     indicatorDF$spearmanR[(n-1)*nRep + r] = tempR 
     indicatorDF$shannon[(n-1)*nRep + r] = tempShannon 
     indicatorDF$jensenShannon[(n-1)*nRep + r] = tempJensenShannon
-    indicatorDF$pvalCategorical[(n-1)*nRep + r] = temppvalCategorical
+    
     
   }
 }
-toc() # 4 per 10 sec, 34 sec per 100, 388 per 1000, 7080 per 10000
+toc() # 4 per 10 sec, 40 sec per 100, 388 per 1000, 7080 per 10000
 
 saveRDS(indicatorDF, file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
 
@@ -200,14 +197,16 @@ ggplot(data = delayDFmod, aes(x = nRemSites, y = dAv)) +
     x = "Number of removed traps", y = "Delay (weeks)"
   ) 
 
-ggplot(data = indicatorDF, aes(x = nRemSites, y = delay, group = nRemSites)) +
-  geom_boxplot(fill = "gray70")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        panel.background = element_rect(fill = "white"),
-        panel.grid = element_line(color = "gray90"))+
-  labs(
-    title = "Delay in the detection of Ae. aegypti",
-    x = "Number of removed traps", y = "Delay (weeks)") 
+ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay.pdf"), device = "pdf", width = 7, height = 5)
+
+# ggplot(data = indicatorDF, aes(x = nRemSites, y = delay, group = nRemSites)) +
+#   geom_boxplot(fill = "gray70")+
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+#         panel.background = element_rect(fill = "white"),
+#         panel.grid = element_line(color = "gray90"))+
+#   labs(
+#     title = "Delay in the detection of Ae. aegypti",
+#     x = "Number of removed traps", y = "Delay (weeks)") 
 
 ## Plot MDR----
 # MDR for aegypti: detectionw within...
@@ -230,6 +229,8 @@ ggplot(data = MDRDFmodPV, aes(x = nRemSites, y = mdr, color = delay)) +
   labs(
     title = "Ae. aegypti detection ratio",
     x = "Number of removed traps", y = "% succesful surveillance")
+
+ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection ratio.pdf"), device = "pdf", width = 7, height = 5)
 
 ## Plot quinquefaciatus trend ----
 # Spearman is ok but perhaps not informative on the overall dynamics
@@ -256,15 +257,17 @@ ggplot(data = quiquefaciatusDFmod, aes(x = nRemSites, y = srAv)) +
     x = "Number of removed traps", y = "Spearman's rank r"
   ) 
 
-ggplot(data = indicatorDF, aes(x = nRemSites, y = spearmanR, group = nRemSites)) +
-  geom_boxplot(fill = "gray70")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        panel.background = element_rect(fill = "white"),
-        panel.grid = element_line(color = "gray90"))+
-  labs(
-    title = "Correlation (Spearman) with complete C. quiquefaciatus observations",
-    x = "Number of removed traps", y = "Spearman's rank r"
-  ) 
+ggsave(filename = paste0(folderOutput, "/F - correlation with C. quiquefaciatus series.pdf"), device = "pdf", width = 7, height = 5)
+
+# ggplot(data = indicatorDF, aes(x = nRemSites, y = spearmanR, group = nRemSites)) +
+#   geom_boxplot(fill = "gray70")+
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+#         panel.background = element_rect(fill = "white"),
+#         panel.grid = element_line(color = "gray90"))+
+#   labs(
+#     title = "Correlation (Spearman) with complete C. quiquefaciatus observations",
+#     x = "Number of removed traps", y = "Spearman's rank r"
+#   ) 
 
 ## Plot shannon ----
 # Alpha Biodiversity: what to take exactly?  shannon
@@ -291,17 +294,19 @@ ggplot(data = alphaBiodiversityDFmod, aes(x = nRemSites, y = sAv)) +
     x = "Number of removed traps", y = "Shannon index"
   ) 
 
-ggplot(data = indicatorDF, aes(x = nRemSites, y = shannon, group = nRemSites)) +
-  geom_boxplot(fill = "gray70")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        panel.background = element_rect(fill = "white"),
-        panel.grid = element_line(color = "gray90"))+
-  labs(
-    title = "Apparent alpha-biodiversity",
-    x = "Number of removed traps", y = "Shannon index"
-  ) 
+ggsave(filename = paste0(folderOutput, "/F - Alpha-biodiversity (Shannon).pdf"), device = "pdf", width = 7, height = 5)
 
-# it just jingle aroundby increasing the variance
+# ggplot(data = indicatorDF, aes(x = nRemSites, y = shannon, group = nRemSites)) +
+#   geom_boxplot(fill = "gray70")+
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+#         panel.background = element_rect(fill = "white"),
+#         panel.grid = element_line(color = "gray90"))+
+#   labs(
+#     title = "Apparent alpha-biodiversity",
+#     x = "Number of removed traps", y = "Shannon index"
+#   ) 
+
+# actually work pretty well
 
 ## Plot jensen-Shannon ----
 # beta Biodiversity:  jensen
@@ -328,13 +333,15 @@ ggplot(data = betaBiodiversityDFmod, aes(x = nRemSites, y = jsAv)) +
     x = "Number of removed traps", y = "Jensen-Shannon divergence"
   ) 
 
-ggplot(data = indicatorDF, aes(x = nRemSites, y = jensenShannon, group = nRemSites)) +
-  geom_boxplot(fill = "gray70")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        panel.background = element_rect(fill = "white"),
-        panel.grid = element_line(color = "gray90"))+
-  labs(
-    title = "Apparent beta-biodiversity",
-    x = "Number of removed traps", y = "Jensen-Shannon divergence"
-  ) 
+ggsave(filename = paste0(folderOutput, "/F - Beta-biodiversity (Jensen-Shannon).pdf"), device = "pdf", width = 7, height = 5)
+
+# ggplot(data = indicatorDF, aes(x = nRemSites, y = jensenShannon, group = nRemSites)) +
+#   geom_boxplot(fill = "gray70")+
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+#         panel.background = element_rect(fill = "white"),
+#         panel.grid = element_line(color = "gray90"))+
+#   labs(
+#     title = "Apparent beta-biodiversity",
+#     x = "Number of removed traps", y = "Jensen-Shannon divergence"
+#   ) 
 
