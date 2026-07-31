@@ -51,14 +51,15 @@ totDFmod <- totDF %>%
   group_by(siteCode, collectionWeek, Species, Area, Landscape) %>%
   summarize(AvgAbundance = mean(avgDayTrap)) %>% # just do the aveage per day per trap across different trap types
   ungroup() %>%
-  mutate(Genus = case_when(Species %in% c("quinquefasciatus", "tarsalis", "incidens", "pipiens", "thriambus","restuans") ~ "Culex",
+  mutate(Genus = case_when(Species %in% c("erythrothorax", "quinquefasciatus", "tarsalis", "incidens", "pipiens", "thriambus","restuans") ~ "Culex",
                            Species %in% c("stigmatosoma", "inornata", "particeps") ~ "Culiseta",
                            Species %in% c("aegypti", "sierrensis", "washinoi", "notoscriptus", "increpitus") ~ "Aedes",
-                           Species %in% c("increpitus", "freeborni", "hermsi") ~ "Anopheles",
+                           Species %in% c("franciscanus", "freeborni", "hermsi") ~ "Anopheles",
                            Species %in% c("signifera") ~ "Orthopodomyia"))
 
 # # Just to tell, here's the species:
 # 
+# Culex erythrothorax
 # Culex quinquefasciatus
 # Culex tarsalis
 # Culex incidens
