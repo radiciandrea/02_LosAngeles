@@ -2,6 +2,7 @@
 
 library(xlsx) #4.5
 library(pracma)
+lirbary(lubridate)
 library(tidyverse)
 
 # datafodler
@@ -12,67 +13,69 @@ folderDataLocal = "Data"
 dir.create(folderDataLocal)
 # Preprocessing ----
 
-#  save data as RDS (done once for all)
+#  save data as RDS (once for all)
 tic()
-ElDoradoDF = read.xlsx(file = paste0(folderData, "/El Dorado Park abundance and arbovirus data.xlsx"),
-                       sheetName = "Sheet2")
-SepulvedaDF = read.xlsx(file = paste0(folderData, "/Sepulveda Basin abundance and arbovirus data.xlsx"),
-                        sheetName = "Sheet2")
+ElDoradoDF = read.xlsx(file = paste0(folderData, "/El Dorado Park data.xlsx"),
+                       sheetName = "ElDoradoTrapData")
+toc()
+SepulvedaDF = read.xlsx(file = paste0(folderData, "/Sepulveda Basin data.xlsx"),
+                        sheetName = "SepulvedaTrapData")
 toc()
 
 # read.xlsx is super slow:
 
 # the two tables have the same items (rbind is ok)
 
-ElDoradoDF$area = "El Dorado"
-ElDoradoDF$type = "green area"
-SepulvedaDF$area = "Sepulveda"
-SepulvedaDF$type = "green area"
+ElDoradoDF$Area = "El Dorado"
+ElDoradoDF$Landscape = "green area"
+SepulvedaDF$Area = "Sepulveda"
+SepulvedaDF$Landscape = "green area"
 
 #rbind
 
 totDF = rbind(ElDoradoDF, SepulvedaDF)
 
-saveRDS(totDF, file = paste0(folderDataLocal, "/Abundance_ElDorado_Sepulveda.rds"))
+saveRDS(totDF, file = paste0(folderDataLocal, "/totDF_ElDorado_Sepulveda.rds"))
 
-totDF <- readRDS(file = paste0(folderDataLocal, "/Abundance_ElDorado_Sepulveda.rds"))
-
-
-# Merging pools ----
-
-# These are test for the disease: therefore rows are repeated for each sample. Le
+# Genus adding; estimating daily total presence per trap per night per site
 
 totDFmod <- totDF %>%
-  group_by(area, pool_id, trap_type, site_code, collection_date, species, sex, sex_condition) %>%
-  summarise(num_count = mean(num_count)) %>%
-  ungroup()
+  rename(siteCode = Site.Code) %>%
+  mutate(tot = pmax(Males, 0, na.rm = T) + pmax(Females, 0, na.rm = T)) %>%
+  mutate(collectionWeek = ISOweek(CollectionDate)) %>%
+  group_by(siteCode, collectionWeek, Species, Area, Landscape) %>%
+  summarize(totWeekly = sum(tot),
+            totNightTraps = sum(pmax(X.Nights*X.Traps, 1, na.rm = T))) %>% # just do the aveage per day per trap across different trap types
+  ungroup() %>%
+  mutate(avgDayTrap = totWeekly/totNightTraps) %>% # there are some 0 nights
+  group_by(siteCode, collectionWeek, Species, Area, Landscape) %>%
+  summarize(AvgAbundance = mean(avgDayTrap)) %>% # just do the aveage per day per trap across different trap types
+  ungroup() %>%
+  mutate(Genus = case_when(Species %in% c("quinquefasciatus", "tarsalis", "incidens", "pipiens", "thriambus","restuans") ~ "Culex",
+                           Species %in% c("stigmatosoma", "inornata", "particeps") ~ "Culiseta",
+                           Species %in% c("aegypti", "sierrensis", "washinoi", "notoscriptus", "increpitus") ~ "Aedes",
+                           Species %in% c("increpitus", "freeborni", "hermsi") ~ "Anopheles",
+                           Species %in% c("signifera") ~ "Orthopodomyia"))
 
-# if they belong to the same pool id, it means that they are the same mosquito that are tested over only multiple diseases.
-# however, if they belong to different pool id, it means that they are different mosquitos - therefore they should be summed.
+# # Just to tell, here's the species:
+# 
+# Culex quinquefasciatus
+# Culex tarsalis
+# Culex incidens
+# Culex pipiens
+# Culex thriambus
+# Culex restuans
+# Culiseta stigmatosoma
+# Culiseta inornata
+# Culiseta particeps
+# Aedes aegypti
+# Aedes sierrensis
+# Aedes washinoi
+# Aedes notoscriptus
+# Aedes increpitus
+# Anopheles franciscanus
+# Anopheles freeborni
+# Anopheles hermsi
+# Orthopodomyia signifera
 
-totDFmod <- totDF %>%
-  group_by(area, trap_type, site_code, collection_date, species, sex, sex_condition) %>%
-  summarise(num_count = sum(num_count)) %>%
-  ungroup()
-# This need to be checked
-
-summary(totDFmod$num_count) # There are never 0: is this normal?
-
-# check #1: there should be only one trap/date/species/sex. Is it so?
-totDFmod$colchk = paste0(totDFmod$trap_type, "_", totDFmod$site_code, "_", totDFmod$collection_date, "_", totDFmod$species, "_", totDFmod$sex_condition)
--sort(-table(totDFmod$colchk))[1]
-
-x = totDFmod %>% filter(site_code == "2278",
-                        collection_date == "2008-07-17",
-                        species == "Culex quinquefasciatus",
-                        sex_condition == "Females - Mixed")
-
-x0 = totDF %>% filter(site_code == "2278",
-                      collection_date == "2008-07-17",
-                      species == "Culex quinquefasciatus",
-                      sex_condition == "Females - Mixed")
-
-totDFmod$colchk = NULL
-
-# ok ther are no more duplicated lines
 saveRDS(totDFmod, file = paste0(folderDataLocal, "/totDFmod_ElDorado_Sepulveda.rds"))

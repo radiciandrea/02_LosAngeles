@@ -1,4 +1,4 @@
-# Surveillance: compute surveillance degradation (delay)
+# Move to "format long"
 
 library(pracma)
 library(tidyverse)
@@ -8,85 +8,86 @@ library(ISOweek)
 folderDataLocal = "Data"
 
 # load data
+totDF <- readRDS(file = paste0(folderDataLocal, "/totDF_ElDorado_Sepulveda.rds"))
 totDFmod <- readRDS(file = paste0(folderDataLocal, "/totDFmod_ElDorado_Sepulveda.rds"))
 
 # Variables definition ----
 
-species = unique(totDFmod$species)
-sites = unique(totDFmod$site_code)
-traps = unique(totDFmod$trap_type)
+species = unique(totDFmod$Species)
+species = species[-which(is.na(species))]
+sites = unique(totDFmod$siteCode)
+#traps = unique(totDFmod$TrapType)
 
-# let's plot the actovity period for each trap (in weeks)
-year_start = year(min(totDFmod$collection_date))
-year_end = year(max(totDFmod$collection_date))
+# let's plot the actovity period for each trap (in weeksRep)
+yearStart = substr(min(totDFmod$collectionWeek), 1, 4)
+yearEnd = substr(max(totDFmod$collectionWeek), 1, 4)
 
-years = rep(year_start:year_end, each = 52)
-weeks = rep(1:52, times = length(year_start:year_end))
+seriesLength = as.numeric(as.Date(paste0(yearEnd, "-12-31")) - as.Date(paste0(yearStart, "-01-01")))
+progressiveFirstDayOfTheWeek = seq(1, seriesLength, 7)
 
-# Dataframe of presences ----
+dates = as.Date(progressiveFirstDayOfTheWeek, format = "%Y-%m-%d", origin = paste0(yearStart, "-01-01"))
+weeks = ISOweek(dates)
 
-sitesDF = data.frame(site = as.factor(rep(sites, times = length(weeks))),
-                     year = rep(years, each = length(sites)),
+# Dataframe of abundances ----
+
+siteWeeksTempDF = data.frame(site = as.factor(rep(sites, times = length(weeks))),
                      week = rep(weeks, each = length(sites)),
                      active = 0,
-                     area = NA,
-                     quinquefasciatus = 0,
-                     tarsalis = 0,
-                     stigmatosoma = 0,
-                     aegypti = 0)
+                     area = NA)
+
+speciesTempDF = data.frame(matrix(data = 0, nrow = nrow(siteWeeksDF), ncol = length(species)))
+names(speciesTempDF) = species
+
+siteWeeksDF = cbind(siteWeeksTempDF, speciesTempDF)
+
+nc = ncol(siteWeeksTempDF)
 
 ## Filling ----
 # not the fastyest way, but: 
 
 tic()
 for(i in 1:nrow(totDFmod)){
-  mi = week(totDFmod$collection_date[i])
-  yi = year(totDFmod$collection_date[i])
-  si = totDFmod$site_code[i]
-  ai = totDFmod$area[i]
-  quinquefasciatusi = (totDFmod$species[i] == "Culex quinquefasciatus")*(totDFmod$num_count[i])
-  tarsalisi = (totDFmod$species[i] == "Culex tarsalis")*(totDFmod$num_count[i])
-  stigmatosomai = (totDFmod$species[i] == "Culex stigmatosoma")*(totDFmod$num_count[i])
-  aegyptii = (totDFmod$species[i] == "Aedes aegypti")*(totDFmod$num_count[i])
   
-  r = which(sitesDF$year == yi & sitesDF$week == mi & sitesDF$site == si)
+  wi = totDFmod$collectionWeek[i]
+  sci = totDFmod$siteCode[i]
+  ai = totDFmod$Area[i]
+  si = totDFmod$Species[i]
   
-  sitesDF$active[r] = 1
-  sitesDF$area[r] = ai
+  #which point of the DataFrame
+  r = which(siteWeeksDF$week == wi & siteWeeksDF$site == sci)
+  
+  siteWeeksDF$active[r] = 1
+  siteWeeksDF$area[r] = ai
   
   # species
-  sitesDF$quinquefasciatus[r] = sitesDF$quinquefasciatus[r] + quinquefasciatusi
-  sitesDF$tarsalis[r] = sitesDF$tarsalis[r] + tarsalisi
-  sitesDF$stigmatosoma[r] =  sitesDF$stigmatosoma[r] + stigmatosomai
-  sitesDF$aegypti[r]= sitesDF$aegypti[r] + aegyptii
-}
-toc() #9 sec
+  if(!is.na(si)){
+    siteWeeksDF[r, nc + which(species == si)] = totDFmod$AvgAbundance[i]
+  }
 
-sitesDF$progYear = :ISOweek2date(
-  sprintf("%d-W%02d-1", sitesDF$year, sitesDF$week)
-)
+}
+toc() #90 sec
 
 # histogram of species
 histDF <- totDFmod %>%
-  group_by(species) %>%
-  summarise(tot = sum(num_count)) %>%
+  group_by(Species) %>%
+  summarise(tot = sum(AvgAbundance)) %>%
   ungroup()
 
-ggplot(histDF, aes(x = species, y = tot))+
+ggplot(histDF, aes(x = tot , y = Species))+
   geom_col(stat = "identity")
 
 # well... quinquefasciatus is the winner
 
 # Image preprocessing
 
-sitesDF <- sitesDF %>%
+siteWeeksDF <- siteWeeksDF %>%
   filter(!is.na(area))
 
 # Plot ----
 
 ## Surveillance ----
 
-ggplot(data = sitesDF, aes(x = progYear, y = site, fill = active))+
+ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = active))+
   geom_tile()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         legend.position = "none",
@@ -97,10 +98,10 @@ ggplot(data = sitesDF, aes(x = progYear, y = site, fill = active))+
 
 ## Ae. aegypti----
 
-ggplot(data = sitesDF, aes(x = progYear, y = site, fill = aegypti))+
+ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = aegypti))+
   geom_tile()+
   scale_fill_viridis_c(option = "A", direction = -1)+
-  geom_tile(data = sitesDF %>% filter(aegypti == 0), aes(x = progYear, y = site), fill = "gray90")+
+  geom_tile(data = siteWeeksDF %>% filter(aegypti == 0), aes(x = week, y = site), fill = "gray90")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
@@ -109,39 +110,15 @@ ggplot(data = sitesDF, aes(x = progYear, y = site, fill = aegypti))+
 
 ## C. quinquefasciatus----
 
-ggplot(data = sitesDF, aes(x = progYear, y = site, fill = quinquefasciatus))+
+ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = quinquefasciatus))+
   geom_tile()+
   scale_fill_viridis_c(option = "A", direction = -1)+
-  geom_tile(data = sitesDF %>% filter(quinquefasciatus == 0), aes(x = progYear, y = site), fill = "gray90")+
+  geom_tile(data = siteWeeksDF %>% filter(quinquefasciatus == 0), aes(x = week, y = site), fill = "gray90")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   facet_wrap(.~area, scales = "free_y", space = "free_y")+
   ggtitle("Detection of C. quinquefasciatus")
-
-## C. stigmatosoma----
-
-ggplot(data = sitesDF, aes(x = progYear, y = site, fill = stigmatosoma))+
-  geom_tile()+
-  scale_fill_viridis_c(option = "A", direction = -1)+
-  geom_tile(data = sitesDF %>% filter(stigmatosoma == 0), aes(x = progYear, y = site), fill = "gray90")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        panel.background = element_rect(fill = "white"),
-        panel.grid = element_line(color = "gray90"))+
-  facet_wrap(.~area, scales = "free_y", space = "free_y")+
-  ggtitle("Detection of C. stigmatosoma")
-
-## C. tarsalis----
-
-ggplot(data = sitesDF, aes(x = progYear, y = site, fill = tarsalis))+
-  geom_tile()+
-  scale_fill_viridis_c(option = "A", direction = -1)+
-  geom_tile(data = sitesDF %>% filter(tarsalis == 0), aes(x = progYear, y = site), fill = "gray90")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        panel.background = element_rect(fill = "white"),
-        panel.grid = element_line(color = "gray90"))+
-  facet_wrap(.~area, scales = "free_y", space = "free_y")+
-  ggtitle("Detection of C. tarsalis")
 
 ## Plot of 1 trajectory ----
 
@@ -151,14 +128,12 @@ ggplot(data = sitesDF, aes(x = progYear, y = site, fill = tarsalis))+
 # site = 2800
 
 ggplot(data = totDFmod %>%
-         filter(site_code == 2655,
-                species == "Culex quinquefasciatus"),
-       aes(x = collection_date,
-           y = num_count)) +
+         filter(siteCode == 2655,
+                Species == "quinquefasciatus"),
+       aes(x = collectionWeek,
+           y = AvgAbundance)) +
   geom_point()
 
-# what does it mean "50"? 
+hist(totDFmod$AvgAbundance)
 
-hist(totDFmod$num_count)
-
-saveRDS(sitesDF, file = paste0(folderDataLocal, "/sitesDF_ElDorado_Sepulveda.rds"))
+saveRDS(siteWeeksDF, file = paste0(folderDataLocal, "/siteWeeksDF_ElDorado_Sepulveda.rds"))
