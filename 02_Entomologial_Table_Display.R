@@ -6,6 +6,7 @@ library(lubridate)
 library(ISOweek)
 
 folderDataLocal = "Data"
+folderOutput = "Outputs"
 
 # load data
 totDF <- readRDS(file = paste0(folderDataLocal, "/totDF_ElDorado_Sepulveda.rds"))
@@ -31,11 +32,12 @@ weeks = ISOweek(dates)
 # Dataframe of abundances ----
 
 siteWeeksTempDF = data.frame(site = as.factor(rep(sites, times = length(weeks))),
-                     week = rep(weeks, each = length(sites)),
-                     active = 0,
-                     area = NA)
+                             datesLabels = rep(dates, each = length(sites)),
+                             week = rep(weeks, each = length(sites)),
+                             active = 0,
+                             area = NA)
 
-speciesTempDF = data.frame(matrix(data = 0, nrow = nrow(siteWeeksDF), ncol = length(species)))
+speciesTempDF = data.frame(matrix(data = 0, nrow = nrow(siteWeeksTempDF), ncol = length(species)))
 names(speciesTempDF) = species
 
 siteWeeksDF = cbind(siteWeeksTempDF, speciesTempDF)
@@ -65,16 +67,27 @@ for(i in 1:nrow(totDFmod)){
   }
 
 }
-toc() #90 sec
+toc() #80-90 sec
 
 # histogram of species
 histDF <- totDFmod %>%
-  group_by(Species) %>%
-  summarise(tot = sum(AvgAbundance)) %>%
-  ungroup()
+  filter(!is.na(Species)) %>%
+  mutate(GenusSpecies = paste(Genus, Species)) %>%
+  group_by(GenusSpecies, Species) %>%
+  summarise(totAbundance = sum(AvgAbundance)) %>%
+  ungroup() %>%
+  mutate(perc = paste0(round(100*totAbundance/sum(totAbundance), 1), "%"))
 
-ggplot(histDF, aes(x = tot , y = Species))+
-  geom_col(stat = "identity")
+ggplot(histDF, aes(x = totAbundance , y = GenusSpecies, label = perc))+
+  xlim(c(0, 1.05*max(histDF$totAbundance)))+
+  geom_col(stat = "identity")+ 
+  geom_text(hjust = -0.1,    # nudge above top of bar
+            size = 3)+
+  theme(legend.position = "none",
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))
+
+ggsave(filename = paste0(folderOutput, "/A - Histogram.pdf"), device = "pdf", width = 7, height = 5)
 
 # well... quinquefasciatus is the winner
 
@@ -87,22 +100,26 @@ siteWeeksDF <- siteWeeksDF %>%
 
 ## Surveillance ----
 
-ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = active))+
+ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = active))+
   geom_tile()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        axis.text.y = element_text(size = 5.5),
         legend.position = "none",
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   facet_wrap(.~area, scales = "free_y", space = "free_y")+
   ggtitle("Active surveillance")
 
+ggsave(filename = paste0(folderOutput, "/B - ActiveSurveillance.pdf"), device = "pdf", width = 14, height = 7)
+
 ## Ae. aegypti----
 
-ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = aegypti))+
+ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = aegypti))+
   geom_tile()+
-  scale_fill_viridis_c(option = "A", direction = -1)+
-  geom_tile(data = siteWeeksDF %>% filter(aegypti == 0), aes(x = week, y = site), fill = "gray90")+
+  scale_fill_viridis_c(option = "H")+
+  geom_tile(data = siteWeeksDF %>% filter(aegypti == 0), aes(x = datesLabels, y = site), fill = "gray90")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        axis.text.y = element_text(size = 5.5),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   facet_wrap(.~area, scales = "free_y", space = "free_y")+
@@ -110,15 +127,38 @@ ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = aegypti))+
 
 ## C. quinquefasciatus----
 
-ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = quinquefasciatus))+
+ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = quinquefasciatus))+
   geom_tile()+
-  scale_fill_viridis_c(option = "A", direction = -1)+
-  geom_tile(data = siteWeeksDF %>% filter(quinquefasciatus == 0), aes(x = week, y = site), fill = "gray90")+
+  scale_fill_viridis_c(option = "H")+
+  geom_tile(data = siteWeeksDF %>% filter(quinquefasciatus == 0), aes(x = datesLabels, y = site), fill = "gray90")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        axis.text.y = element_text(size = 5.5),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   facet_wrap(.~area, scales = "free_y", space = "free_y")+
   ggtitle("Detection of C. quinquefasciatus")
+
+# plot to save for all species
+
+for(si in species){
+  
+  gsName = histDF %>% filter(Species == si) %>% pull(GenusSpecies)
+  gsPerc = histDF %>% filter(Species == si) %>% pull(perc)
+  
+  ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = .data[[si]]))+
+    geom_tile()+
+    scale_fill_viridis_c(option = "H", name="N/trap/night")+
+    geom_tile(data = siteWeeksDF %>% filter(.data[[si]] == 0), aes(x = datesLabels, y = site), fill = "gray90")+
+    theme(axis.text.x = element_text(angle = 90, hjust = 1),
+          axis.text.y = element_text(size = 5.5),
+          panel.background = element_rect(fill = "white"),
+          panel.grid = element_line(color = "gray90"))+
+    facet_wrap(.~area, scales = "free_y", space = "free_y")+
+    ggtitle(paste0("Detection of ", gsName, " - ", gsPerc, " of the total sampled species"))
+  
+    ggsave(filename = paste0(folderOutput, "/C - ", gsName, ".pdf"), device = "pdf", width = 14, height = 7)
+  
+}
 
 ## Plot of 1 trajectory ----
 
@@ -127,11 +167,18 @@ ggplot(data = siteWeeksDF, aes(x = week, y = site, fill = quinquefasciatus))+
 # species = Culex quinquefasciatus
 # site = 2800
 
-ggplot(data = totDFmod %>%
-         filter(siteCode == 2655,
-                Species == "quinquefasciatus"),
-       aes(x = collectionWeek,
-           y = AvgAbundance)) +
+siteMaxCq = siteWeeksDF %>%
+  select(c("site", "quinquefasciatus")) %>%
+  group_by(site)%>%
+  summarise(sumAvg = sum(quinquefasciatus)) %>%
+  ungroup() %>%
+  filter(sumAvg == max(sumAvg)) %>%
+  pull(site)
+
+ggplot(data = siteWeeksDF %>%
+         filter(site == siteMaxCq),
+       aes(x = datesLabels,
+           y = quinquefasciatus)) +
   geom_point()
 
 hist(totDFmod$AvgAbundance)
