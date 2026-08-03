@@ -31,18 +31,18 @@ weeks = ISOweek(dates)
 
 # Dataframe of abundances ----
 
-siteWeeksTempDF = data.frame(site = as.factor(rep(sites, times = length(weeks))),
+siteWeeksTempng = data.frame(site = as.factor(rep(sites, times = length(weeks))),
                              datesLabels = rep(dates, each = length(sites)),
                              week = rep(weeks, each = length(sites)),
                              active = 0,
                              area = NA)
 
-speciesTempDF = data.frame(matrix(data = 0, nrow = nrow(siteWeeksTempDF), ncol = length(species)))
-names(speciesTempDF) = species
+speciesTempng = data.frame(matrix(data = 0, nrow = nrow(siteWeeksTempng), ncol = length(species)))
+names(speciesTempng) = species
 
-siteWeeksDF = cbind(siteWeeksTempDF, speciesTempDF)
+siteWeeksDF = cbind(siteWeeksTempng, speciesTempng)
 
-nc = ncol(siteWeeksTempDF)
+nc = ncol(siteWeeksTempng)
 
 ## Filling ----
 # not the fastyest way, but: 
@@ -87,7 +87,7 @@ ggplot(histDF, aes(x = totAbundance , y = GenusSpecies, label = perc))+
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))
 
-ggsave(filename = paste0(folderOutput, "/A - Histogram.pdf"), device = "pdf", width = 7, height = 5)
+ggsave(filename = paste0(folderOutput, "/A - Histogram.png"), device = "png", width = 7, height = 5)
 
 # well... quinquefasciatus is the winner
 
@@ -95,6 +95,10 @@ ggsave(filename = paste0(folderOutput, "/A - Histogram.pdf"), device = "pdf", wi
 
 siteWeeksDF <- siteWeeksDF %>%
   filter(!is.na(area))
+
+saveRDS(siteWeeksDF, file = paste0(folderDataLocal, "/siteWeeksDF_ElDorado_Sepulveda.rds"))
+
+siteWeeksDF <- readRDS(file = paste0(folderDataLocal, "/siteWeeksDF_ElDorado_Sepulveda.rds"))
 
 # Plot ----
 
@@ -110,7 +114,7 @@ ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = active))+
   facet_wrap(.~area, scales = "free_y", space = "free_y")+
   ggtitle("Active surveillance")
 
-ggsave(filename = paste0(folderOutput, "/B - ActiveSurveillance.pdf"), device = "pdf", width = 14, height = 7)
+ggsave(filename = paste0(folderOutput, "/B - ActiveSurveillance.png"), device = "png", width = 14, height = 7)
 
 ## Ae. aegypti----
 
@@ -156,7 +160,7 @@ for(si in species){
     facet_wrap(.~area, scales = "free_y", space = "free_y")+
     ggtitle(paste0("Detection of ", gsName, " - ", gsPerc, " of the total sampled species"))
   
-    ggsave(filename = paste0(folderOutput, "/C - ", gsName, ".pdf"), device = "pdf", width = 14, height = 7)
+    ggsave(filename = paste0(folderOutput, "/C - ", gsName, ".png"), device = "png", width = 14, height = 7)
   
 }
 
@@ -183,4 +187,86 @@ ggplot(data = siteWeeksDF %>%
 
 hist(totDFmod$AvgAbundance)
 
-saveRDS(siteWeeksDF, file = paste0(folderDataLocal, "/siteWeeksDF_ElDorado_Sepulveda.rds"))
+# Surveillance season ----
+
+collectionDF <- totDFmod %>%
+  mutate(year = as.numeric(substr(collectionWeek, 1,4))) %>%
+  select(c("collectionWeek", "year")) %>%
+  unique() %>%
+  group_by(year) %>%
+  summarize(nWeeks = n()) %>%
+  ungroup() %>%
+  mutate(Area = "all", type = "all year around")
+  
+collectionAreaDF <- totDFmod %>%
+  mutate(year = as.numeric(substr(collectionWeek, 1,4))) %>%
+  select(c("collectionWeek", "year", "Area")) %>%
+  unique() %>%
+  group_by(year, Area) %>%
+  summarize(nWeeks = n()) %>%
+  ungroup() %>%
+  mutate(type = "all year around")
+
+# eary surveillance = before 15st of may, before week 11
+
+earlyCollectionDF <- totDFmod %>%
+  mutate(year = as.numeric(substr(collectionWeek, 1, 4))) %>%
+  mutate(collectionWeek = as.numeric(substr(collectionWeek, 7,8))) %>%
+  filter(collectionWeek < 11 ) %>%
+  select(c("collectionWeek", "year")) %>%
+  unique() %>%
+  group_by(year) %>%
+  summarize(nWeeks = n()) %>%
+  ungroup() %>%
+  mutate(Area = "all", type = "early (may)")
+
+earlyCollectionAreaDF <- totDFmod %>%
+  mutate(year = as.numeric(substr(collectionWeek, 1,4))) %>%
+  mutate(collectionWeek = as.numeric(substr(collectionWeek, 7,8))) %>%
+  filter(collectionWeek < 11 ) %>%
+  select(c("collectionWeek", "year", "Area")) %>%
+  unique() %>%
+  group_by(year, Area) %>%
+  summarize(nWeeks = n()) %>%
+  ungroup() %>%
+  mutate(type = "early (may)")
+
+# late surveillance = after 15st of october, after week 41
+
+lateCollectionDF <- totDFmod %>%
+  mutate(year = as.numeric(substr(collectionWeek, 1, 4))) %>%
+  mutate(collectionWeek = as.numeric(substr(collectionWeek, 7,8))) %>%
+  filter(collectionWeek > 41 ) %>%
+  select(c("collectionWeek", "year")) %>%
+  unique() %>%
+  group_by(year) %>%
+  summarize(nWeeks = n()) %>%
+  ungroup() %>%
+  mutate(Area = "all", type = "late (october)")
+
+lateCollectionAreaDF <- totDFmod %>%
+  mutate(year = as.numeric(substr(collectionWeek, 1,4))) %>%
+  mutate(collectionWeek = as.numeric(substr(collectionWeek, 7,8))) %>%
+  filter(collectionWeek > 41 ) %>%
+  select(c("collectionWeek", "year", "Area")) %>%
+  unique() %>%
+  group_by(year, Area) %>%
+  summarize(nWeeks = n()) %>%
+  ungroup() %>%
+  mutate(type = "late (october)")
+
+totCollectionDF = rbind(collectionDF, collectionAreaDF,
+                     earlyCollectionDF, earlyCollectionAreaDF,
+                     lateCollectionDF, lateCollectionAreaDF)
+
+ggplot(data = totCollectionDF, aes(x = year, y = nWeeks, color = Area))+
+  geom_point()+
+  geom_line()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        axis.text.y = element_text(size = 5.5),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  facet_wrap(.~type, scales = "free_y", nrow = 3)+
+  ggtitle("Surveilled weeks per year")
+
+ggsave(filename = paste0(folderOutput, "/B - ActiveWeekSurveillance.png"), device = "png", width = 14, height = 7)
