@@ -1,5 +1,4 @@
-# Surveillance: compute surveillance degradation (reduced number of traps)
-# with MC approach
+# Select only recent data.
 
 library(pracma)
 library(tidyverse)
@@ -70,7 +69,7 @@ ggplot(histDF, aes(x = totAbundance , y = GenusSpecies, label = perc))+
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))
 
-ggsave(filename = paste0(folderOutput, "/D - Histogram after selection.pdf"), device = "pdf", width = 7, height = 5)
+ggsave(filename = paste0(folderOutput, "/D - Histogram after selection.png"), device = "png", width = 7, height = 5)
 
 # plot to save for all species
 
@@ -79,10 +78,10 @@ for(si in species){
   gsName = histDF %>% filter(Species == si) %>% pull(GenusSpecies)
   gsPerc = histDF %>% filter(Species == si) %>% pull(perc)
   
-  ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = .data[[si]]))+
+  ggplot(data = siteWeeksDFsel, aes(x = datesLabels, y = site, fill = .data[[si]]))+
     geom_tile()+
     scale_fill_viridis_c(option = "H", name="N/trap/night")+
-    geom_tile(data = siteWeeksDF %>% filter(.data[[si]] == 0), aes(x = datesLabels, y = site), fill = "gray90")+
+    geom_tile(data = siteWeeksDFsel %>% filter(.data[[si]] == 0), aes(x = datesLabels, y = site), fill = "gray90")+
     theme(axis.text.x = element_text(angle = 90, hjust = 1),
           axis.text.y = element_text(size = 5.5),
           panel.background = element_rect(fill = "white"),
@@ -90,7 +89,7 @@ for(si in species){
     facet_wrap(.~area, scales = "free_y", space = "free_y")+
     ggtitle(paste0("Detection of ", gsName, " - ", gsPerc, " of the total sampled species"))
   
-  ggsave(filename = paste0(folderOutput, "/E - ", gsName, " after selection.pdf"), device = "pdf", width = 14, height = 7)
+  ggsave(filename = paste0(folderOutput, "/E - ", gsName, " after selection.png"), device = "png", width = 14, height = 7)
   
 }
 
