@@ -36,6 +36,7 @@ SepulvedaDF$Landscape = "green area"
 totDF = rbind(ElDoradoDF, SepulvedaDF)
 
 saveRDS(totDF, file = paste0(folderDataLocal, "/totDF_ElDorado_Sepulveda.rds"))
+totDF = readRDS(file = paste0(folderDataLocal, "/totDF_ElDorado_Sepulveda.rds"))
 
 # Genus adding; estimating daily total presence per trap per night per site
 
@@ -43,12 +44,12 @@ totDFmod <- totDF %>%
   rename(siteCode = Site.Code) %>%
   mutate(tot = pmax(Males, 0, na.rm = T) + pmax(Females, 0, na.rm = T)) %>%
   mutate(collectionWeek = ISOweek(CollectionDate)) %>%
-  group_by(siteCode, collectionWeek, Species, Area, Landscape) %>%
+  group_by(siteCode, collectionWeek, Species, Area, TrapType, Landscape) %>%
   summarize(totWeekly = sum(tot),
             totNightTraps = sum(pmax(X.Nights*X.Traps, 1, na.rm = T))) %>% # just do the aveage per day per trap across different trap types
   ungroup() %>%
   mutate(avgDayTrap = totWeekly/totNightTraps) %>% # there are some 0 nights
-  group_by(siteCode, collectionWeek, Species, Area, Landscape) %>%
+  group_by(siteCode, collectionWeek, Species, Area, TrapType, Landscape) %>%
   summarize(AvgAbundance = mean(avgDayTrap)) %>% # just do the aveage per day per trap across different trap types
   ungroup() %>%
   mutate(Genus = case_when(Species %in% c("erythrothorax", "quinquefasciatus", "tarsalis", "incidens", "pipiens", "thriambus","restuans") ~ "Culex",
