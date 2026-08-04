@@ -43,9 +43,10 @@ totDF = readRDS(file = paste0(folderDataLocal, "/totDF_ElDorado_Sepulveda.rds"))
 
 totDFmod <- totDF %>%
   rename(siteCode = Site.Code) %>%
+  mutate(trap = paste0(siteCode, "_", TrapType))%>%
   mutate(tot = pmax(Males, 0, na.rm = T) + pmax(Females, 0, na.rm = T)) %>%
   mutate(collectionWeek = ISOweek(CollectionDate)) %>%
-  group_by(siteCode, collectionWeek, Species, Area, TrapType, Landscape) %>%
+  group_by(siteCode, trap, collectionWeek, Species, Area, TrapType, Landscape) %>%
   summarize(totWeekly = sum(tot),
             totNightTraps = sum(pmax(X.Nights*X.Traps, 1, na.rm = T)), # there are some 0 nights
             avgDayTrap = totWeekly/totNightTraps, # just do the aveage per day per trap 

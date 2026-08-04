@@ -17,7 +17,7 @@ totDFmod <- readRDS(file = paste0(folderDataLocal, "/totDFmod_ElDorado_Sepulveda
 species = unique(totDFmod$Species)
 species = species[-which(is.na(species))]
 sites = unique(totDFmod$siteCode)
-#traps = unique(totDFmod$TrapType)
+traps = unique(totDFmod$trap)
 
 # let's plot the actovity period for each trap (in weeksRep)
 yearStart = substr(min(totDFmod$collectionWeek), 1, 4)
@@ -31,18 +31,18 @@ weeks = ISOweek(dates)
 
 # Dataframe of abundances ----
 
-siteWeeksTempng = data.frame(site = as.factor(rep(sites, times = length(weeks))),
-                             datesLabels = rep(dates, each = length(sites)),
-                             week = rep(weeks, each = length(sites)),
+trapWeeksTempng = data.frame(trap = as.factor(rep(traps, times = length(weeks))),
+                             datesLabels = rep(dates, each = length(traps)),
+                             week = rep(weeks, each = length(traps)),
                              active = 0,
                              area = NA)
 
-speciesTempng = data.frame(matrix(data = 0, nrow = nrow(siteWeeksTempng), ncol = length(species)))
+speciesTempng = data.frame(matrix(data = 0, nrow = nrow(trapWeeksTempng), ncol = length(species)))
 names(speciesTempng) = species
 
-siteWeeksDF = cbind(siteWeeksTempng, speciesTempng)
+trapWeeksDF = cbind(trapWeeksTempng, speciesTempng)
 
-nc = ncol(siteWeeksTempng)
+nc = ncol(trapWeeksTempng)
 
 ## Filling ----
 # not the fastyest way, but: 
@@ -51,19 +51,19 @@ tic()
 for(i in 1:nrow(totDFmod)){
   
   wi = totDFmod$collectionWeek[i]
-  sci = totDFmod$siteCode[i]
+  ti = totDFmod$trap[i]
   ai = totDFmod$Area[i]
   si = totDFmod$Species[i]
   
   #which point of the DataFrame
-  r = which(siteWeeksDF$week == wi & siteWeeksDF$site == sci)
+  r = which(trapWeeksDF$week == wi & trapWeeksDF$trap == ti)
   
-  siteWeeksDF$active[r] = 1
-  siteWeeksDF$area[r] = ai
+  trapWeeksDF$active[r] = 1
+  trapWeeksDF$area[r] = ai
   
   # species
   if(!is.na(si)){
-    siteWeeksDF[r, nc + which(species == si)] = totDFmod$AvgAbundance[i]
+    trapWeeksDF[r, nc + which(species == si)] = totDFmod$AvgAbundance[i]
   }
 
 }
@@ -93,21 +93,25 @@ ggsave(filename = paste0(folderOutput, "/A - Histogram.png"), device = "png", wi
 
 # Image preprocessing
 
-siteWeeksDF <- siteWeeksDF %>%
+trapWeeksDF <- trapWeeksDF %>%
   filter(!is.na(area))
 
-saveRDS(siteWeeksDF, file = paste0(folderDataLocal, "/siteWeeksDF_ElDorado_Sepulveda.rds"))
+saveRDS(trapWeeksDF, file = paste0(folderDataLocal, "/trapWeeksDF_ElDorado_Sepulveda.rds"))
 
-siteWeeksDF <- readRDS(file = paste0(folderDataLocal, "/siteWeeksDF_ElDorado_Sepulveda.rds"))
+trapWeeksDF <- readRDS(file = paste0(folderDataLocal, "/trapWeeksDF_ElDorado_Sepulveda.rds"))
 
 # Plot ----
 
+length(unique(totDFmod$siteCode))
+length(unique(totDFmod$trap))
+length(unique(totDFmod$TrapType))
+
 ## Surveillance ----
 
-ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = active))+
+ggplot(data = trapWeeksDF, aes(x = datesLabels, y = trap, fill = active))+
   geom_tile()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        axis.text.y = element_text(size = 5.5),
+        axis.text.y = element_text(size = 3),
         legend.position = "none",
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
@@ -118,12 +122,12 @@ ggsave(filename = paste0(folderOutput, "/B - ActiveSurveillance.png"), device = 
 
 ## Ae. aegypti----
 
-ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = aegypti))+
+ggplot(data = trapWeeksDF, aes(x = datesLabels, y = trap, fill = aegypti))+
   geom_tile()+
   scale_fill_viridis_c(option = "H")+
-  geom_tile(data = siteWeeksDF %>% filter(aegypti == 0), aes(x = datesLabels, y = site), fill = "gray90")+
+  geom_tile(data = trapWeeksDF %>% filter(aegypti == 0), aes(x = datesLabels, y = trap), fill = "gray90")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        axis.text.y = element_text(size = 5.5),
+        axis.text.y = element_text(size = 3),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   facet_wrap(.~area, scales = "free_y", space = "free_y")+
@@ -131,12 +135,12 @@ ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = aegypti))+
 
 ## C. quinquefasciatus----
 
-ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = quinquefasciatus))+
+ggplot(data = trapWeeksDF, aes(x = datesLabels, y = trap, fill = quinquefasciatus))+
   geom_tile()+
   scale_fill_viridis_c(option = "H")+
-  geom_tile(data = siteWeeksDF %>% filter(quinquefasciatus == 0), aes(x = datesLabels, y = site), fill = "gray90")+
+  geom_tile(data = trapWeeksDF %>% filter(quinquefasciatus == 0), aes(x = datesLabels, y = trap), fill = "gray90")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        axis.text.y = element_text(size = 5.5),
+        axis.text.y = element_text(size = 3),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   facet_wrap(.~area, scales = "free_y", space = "free_y")+
@@ -149,12 +153,12 @@ for(si in species){
   gsName = histDF %>% filter(Species == si) %>% pull(GenusSpecies)
   gsPerc = histDF %>% filter(Species == si) %>% pull(perc)
   
-  ggplot(data = siteWeeksDF, aes(x = datesLabels, y = site, fill = .data[[si]]))+
+  ggplot(data = trapWeeksDF, aes(x = datesLabels, y = trap, fill = .data[[si]]))+
     geom_tile()+
     scale_fill_viridis_c(option = "H", name="N/trap/night")+
-    geom_tile(data = siteWeeksDF %>% filter(.data[[si]] == 0), aes(x = datesLabels, y = site), fill = "gray90")+
+    geom_tile(data = trapWeeksDF %>% filter(.data[[si]] == 0), aes(x = datesLabels, y = trap), fill = "gray90")+
     theme(axis.text.x = element_text(angle = 90, hjust = 1),
-          axis.text.y = element_text(size = 5.5),
+          axis.text.y = element_text(size = 3),
           panel.background = element_rect(fill = "white"),
           panel.grid = element_line(color = "gray90"))+
     facet_wrap(.~area, scales = "free_y", space = "free_y")+
@@ -166,21 +170,21 @@ for(si in species){
 
 ## Plot of 1 trajectory ----
 
-# let's consider 1 trap (site) and 1 species for plotting
+# let's consider 1 trap and 1 species for plotting
 
 # species = Culex quinquefasciatus
-# site = 2800
+# trap = 2650_GRVD
 
-siteMaxCq = siteWeeksDF %>%
-  select(c("site", "quinquefasciatus")) %>%
-  group_by(site)%>%
+trapMaxCq = trapWeeksDF %>%
+  select(c("trap", "quinquefasciatus")) %>%
+  group_by(trap)%>%
   summarise(sumAvg = sum(quinquefasciatus)) %>%
   ungroup() %>%
   filter(sumAvg == max(sumAvg)) %>%
-  pull(site)
+  pull(trap)
 
-ggplot(data = siteWeeksDF %>%
-         filter(site == siteMaxCq),
+ggplot(data = trapWeeksDF %>%
+         filter(trap == trapMaxCq),
        aes(x = datesLabels,
            y = quinquefasciatus)) +
   geom_point()
@@ -218,7 +222,7 @@ earlyCollectionDF <- totDFmod %>%
   group_by(year) %>%
   summarize(nWeeks = n()) %>%
   ungroup() %>%
-  mutate(Area = "all", type = "early (may)")
+  mutate(Area = "all", type = "early (before mid may)")
 
 earlyCollectionAreaDF <- totDFmod %>%
   mutate(year = as.numeric(substr(collectionWeek, 1,4))) %>%
@@ -229,7 +233,7 @@ earlyCollectionAreaDF <- totDFmod %>%
   group_by(year, Area) %>%
   summarize(nWeeks = n()) %>%
   ungroup() %>%
-  mutate(type = "early (may)")
+  mutate(type = "early (before mid may)")
 
 # late surveillance = after 15st of october, after week 41
 
@@ -242,7 +246,7 @@ lateCollectionDF <- totDFmod %>%
   group_by(year) %>%
   summarize(nWeeks = n()) %>%
   ungroup() %>%
-  mutate(Area = "all", type = "late (october)")
+  mutate(Area = "all", type = "late (after mid october)")
 
 lateCollectionAreaDF <- totDFmod %>%
   mutate(year = as.numeric(substr(collectionWeek, 1,4))) %>%
@@ -253,7 +257,7 @@ lateCollectionAreaDF <- totDFmod %>%
   group_by(year, Area) %>%
   summarize(nWeeks = n()) %>%
   ungroup() %>%
-  mutate(type = "late (october)")
+  mutate(type = "late (after mid october)")
 
 totCollectionDF = rbind(collectionDF, collectionAreaDF,
                      earlyCollectionDF, earlyCollectionAreaDF,
@@ -262,11 +266,10 @@ totCollectionDF = rbind(collectionDF, collectionAreaDF,
 ggplot(data = totCollectionDF, aes(x = year, y = nWeeks, color = Area))+
   geom_point()+
   geom_line()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        axis.text.y = element_text(size = 5.5),
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),,
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   facet_wrap(.~type, scales = "free_y", nrow = 3)+
   ggtitle("Surveilled weeks per year")
 
-ggsave(filename = paste0(folderOutput, "/B - ActiveWeekSurveillance.png"), device = "png", width = 14, height = 7)
+ggsave(filename = paste0(folderOutput, "/B - ActiveWeekSurveillance.png"), device = "png", width = 10, height = 7)

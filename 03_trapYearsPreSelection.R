@@ -9,47 +9,53 @@ folderOutput = "Outputs"
 
 # load data
 totDFmod <- readRDS(file = paste0(folderDataLocal, "/totDFmod_ElDorado_Sepulveda.rds"))
-siteWeeksDF <- readRDS(file = paste0(folderDataLocal, "/siteWeeksDF_ElDorado_Sepulveda.rds"))
+trapWeeksDF <- readRDS(file = paste0(folderDataLocal, "/trapWeeksDF_ElDorado_Sepulveda.rds"))
 
 ## Traps and year selection --
 
-DFsel1 <- siteWeeksDF %>%
+DFsel1 <- trapWeeksDF %>%
   mutate(year = as.numeric(substr(week, 1, 4)))%>%
   group_by(year)%>%
-  summarise(nsites = n()/52)%>%
+  summarise(ntraps = n()/52)%>%
   ungroup()
 
-ggplot(DFsel1, aes(x=year, y=nsites))+
-  geom_bar(stat = "identity")
+ggplot(DFsel1, aes(x=year, y=ntraps))+
+  geom_bar(stat = "identity")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))
 
-# let's consider 203 to 2022
+# let's consider 2023 to 2022
 yearSel = 2003:2022
 
 # also: activity period
 
-DFsel2 <- siteWeeksDF %>%
-  group_by(site)%>%
+DFsel2 <- trapWeeksDF %>%
+  group_by(trap)%>%
   summarise(nweeks = n())%>%
   ungroup()
 
-ggplot(DFsel2, aes(x=site, y=nweeks, label = nweeks))+
+ggplot(DFsel2, aes(x= reorder(trap, -nweeks), y=nweeks, label = nweeks))+
   geom_bar(stat = "identity")+
   geom_text(vjust = -0.2,    # nudge above top of bar
-            size = 3)
+            size = 2)+
+  theme(axis.text.x = element_text(angle = 90, size = 6),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))
 
-# let's consider at least 20 
+# let's consider at least 10 
 
-siteSel = DFsel2 %>% filter(nweeks > 20) %>% pull(site)
+trapSel = DFsel2 %>% filter(nweeks >= 10) %>% pull(trap)
 
-siteWeeksDFsel <- siteWeeksDF %>%
-  filter(site %in% siteSel) %>%
+trapWeeksDFsel <- trapWeeksDF %>%
+  filter(trap %in% trapSel) %>%
   filter(datesLabels >= as.Date(paste0(min(yearSel), "-01-01"))) %>%
   filter(datesLabels <= as.Date(paste0(max(yearSel), "-12-31")))
 
 totDFsel <- totDFmod %>%
   mutate(year = as.numeric(substr(collectionWeek, 1, 4)))%>%
   filter(year %in% yearSel) %>%
-  filter(siteCode %in% siteSel)
+  filter(trap %in% trapSel)
 
 # histogram of species
 histDF <- totDFsel %>%
@@ -78,10 +84,10 @@ for(si in species){
   gsName = histDF %>% filter(Species == si) %>% pull(GenusSpecies)
   gsPerc = histDF %>% filter(Species == si) %>% pull(perc)
   
-  ggplot(data = siteWeeksDFsel, aes(x = datesLabels, y = site, fill = .data[[si]]))+
+  ggplot(data = trapWeeksDFsel, aes(x = datesLabels, y = trap, fill = .data[[si]]))+
     geom_tile()+
     scale_fill_viridis_c(option = "H", name="N/trap/night")+
-    geom_tile(data = siteWeeksDFsel %>% filter(.data[[si]] == 0), aes(x = datesLabels, y = site), fill = "gray90")+
+    geom_tile(data = trapWeeksDFsel %>% filter(.data[[si]] == 0), aes(x = datesLabels, y = trap), fill = "gray90")+
     theme(axis.text.x = element_text(angle = 90, hjust = 1),
           axis.text.y = element_text(size = 5.5),
           panel.background = element_rect(fill = "white"),
@@ -96,4 +102,4 @@ for(si in species){
 # save
 
 saveRDS(totDFsel, file = paste0(folderDataLocal, "/totDFsel_ElDorado_Sepulveda.rds"))
-saveRDS(siteWeeksDFsel, file = paste0(folderDataLocal, "/siteWeeksDFsel_ElDorado_Sepulveda.rds"))
+saveRDS(trapWeeksDFsel, file = paste0(folderDataLocal, "/trapWeeksDFsel_ElDorado_Sepulveda.rds"))

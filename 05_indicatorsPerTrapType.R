@@ -25,14 +25,14 @@ genusSpecies = unique(totDFmod$genusSpecies)
 #surveillanceEffort per trap
 trapDF <- totDFmod %>%
   group_by(TrapType) %>%
-  summarize(Sites = length(unique(siteCode)),
+  summarize(Traps = length(unique(trap)),
             Weeks = length(unique(collectionWeek)),
             Effort = sum(totNightTraps))%>%
   ungroup() 
 
-gsites = ggplot(trapDF, aes(x = TrapType, y = Sites))+
+gtraps = ggplot(trapDF, aes(x = TrapType, y = Traps))+
   geom_col() +
-  labs(y = "Spatial records (sites)", x = "Traps" ) +
+  labs(y = "Spatial records (traps)", x = "" ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
@@ -40,7 +40,7 @@ gsites = ggplot(trapDF, aes(x = TrapType, y = Sites))+
 
 gweeks = ggplot(trapDF, aes(x = TrapType, y = Weeks))+
   geom_col() +
-  labs(y = "Temporal records (weeks)", x = "Traps" ) +
+  labs(y = "Temporal records (weeks)", x = "Trap type" ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
@@ -48,13 +48,13 @@ gweeks = ggplot(trapDF, aes(x = TrapType, y = Weeks))+
 
 geffort = ggplot(trapDF, aes(x = TrapType, y = Effort))+
   geom_col() +
-  labs(y = "Effort (total trap-nights)", x = "Traps" ) +
+  labs(y = "Effort (total trap-nights)", x = "" ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   ggtitle("")
 
-gtot = gsites + gweeks + geffort 
+gtot = gtraps + gweeks + geffort 
 
 ggsave(plot = gtot, filename = paste0(folderOutput, "/A - Trapping effort.png"),
        device = "png", width = 7, height = 5)
@@ -147,36 +147,36 @@ totDFmod <- totDFmod %>%
 #surveillanceEffort per trap
 trapDFsel <- totDFmod %>%
   group_by(TrapType) %>%
-  summarize(Sites = length(unique(siteCode)),
+  summarize(Traps = length(unique(trap)),
             Weeks = length(unique(collectionWeek)),
             Effort = sum(totNightTraps))%>%
   ungroup() 
 
-gsites = ggplot(trapDFsel, aes(x = TrapType, y = Sites))+
+gtraps = ggplot(trapDF, aes(x = TrapType, y = Traps))+
   geom_col() +
-  labs(y = "Spatial records (sites)", x = "Traps" ) +
+  labs(y = "Spatial records (traps)", x = "" ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   ggtitle("")
 
-gweeks = ggplot(trapDFsel, aes(x = TrapType, y = Weeks))+
+gweeks = ggplot(trapDF, aes(x = TrapType, y = Weeks))+
   geom_col() +
-  labs(y = "Temporal records (weeks)", x = "Traps" ) +
+  labs(y = "Temporal records (weeks)", x = "Trap type" ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   ggtitle("Measures of trapping effort")
 
-geffort = ggplot(trapDFsel, aes(x = TrapType, y = Effort))+
+geffort = ggplot(trapDF, aes(x = TrapType, y = Effort))+
   geom_col() +
-  labs(y = "Effort (total trap-nights)", x = "Traps" ) +
+  labs(y = "Effort (total trap-nights)", x = "" ) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))+
   ggtitle("")
 
-gtot = gsites + gweeks + geffort 
+gtot = gtraps + gweeks + geffort 
 
 ggsave(plot = gtot, filename = paste0(folderOutput, "/E - Trapping effort after selection.png"),
        device = "png", width = 7, height = 5)
