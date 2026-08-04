@@ -49,7 +49,7 @@ trapDF = data.frame(trap = totDFmod %>%
   
 nSites = length(sites)
 
-sitesDF = data.frame(site = sites,
+sitesDF = data.frame(site = as.factor(sites),
                      delay = NA,
                      mr = NA,
                      deltaShannon = NA)
@@ -107,21 +107,21 @@ for(i in 1:nSites){
   }
 toc()
 
-ggDelay = ggplot(sitesDF, aes(x = as.factor(site), y = delay))+
+ggDelay = ggplot(sitesDF, aes(x = reorder(site, -delay), y = delay))+
   geom_col()+
   labs(title = "Delay due to trap removal", y = "weeks", x = "removed site")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))
 
-ggSpearman = ggplot(sitesDF, aes(x = as.factor(site), y = mr))+
+ggSpearman = ggplot(sitesDF, aes(x = reorder(site, -mr), y = mr))+
   geom_col()+
   labs(title = "Distance to overall C. quinquefasciatus trend", y = "1 - Spearman's r", x = "removed site")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))
 
-ggShannon = ggplot(sitesDF, aes(x = as.factor(site), y = deltaShannon))+
+ggShannon = ggplot(sitesDF, aes(x = reorder(site, -deltaShannon), y = deltaShannon))+
   geom_col()+
   labs(title = "Distance to correct biodiversity indicator", y = "delta Shannon", x = "removed site")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
