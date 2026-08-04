@@ -150,6 +150,6 @@ ggShannonJensen = ggplot(perfTrapsDF, aes(x = reorder(trap, -shannonJensen), y =
 
 gtot = ggDelay / ggSpearman / ggShannonJensen
 
-ggsave(plot = gtot, filename = paste0(folderOutput, "/F - trap importance.png"),
+ggsave(plot = gtot, filename = paste0(folderOutput, "/G - trap importance.png"),
        device = "png", width = 7, height = 10)
 
