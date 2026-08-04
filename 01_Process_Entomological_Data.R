@@ -2,8 +2,9 @@
 
 library(xlsx) #4.5
 library(pracma)
-lirbary(lubridate)
+library(lubridate)
 library(tidyverse)
+library(ISOweek)
 
 # datafodler
 
@@ -46,11 +47,9 @@ totDFmod <- totDF %>%
   mutate(collectionWeek = ISOweek(CollectionDate)) %>%
   group_by(siteCode, collectionWeek, Species, Area, TrapType, Landscape) %>%
   summarize(totWeekly = sum(tot),
-            totNightTraps = sum(pmax(X.Nights*X.Traps, 1, na.rm = T))) %>% # just do the aveage per day per trap across different trap types
-  ungroup() %>%
-  mutate(avgDayTrap = totWeekly/totNightTraps) %>% # there are some 0 nights
-  group_by(siteCode, collectionWeek, Species, Area, TrapType, Landscape) %>%
-  summarize(AvgAbundance = mean(avgDayTrap)) %>% # just do the aveage per day per trap across different trap types
+            totNightTraps = sum(pmax(X.Nights*X.Traps, 1, na.rm = T)), # there are some 0 nights
+            avgDayTrap = totWeekly/totNightTraps, # just do the aveage per day per trap 
+            AvgAbundance = mean(avgDayTrap)) %>% 
   ungroup() %>%
   mutate(Genus = case_when(Species %in% c("erythrothorax", "quinquefasciatus", "tarsalis", "incidens", "pipiens", "thriambus","restuans") ~ "Culex",
                            Species %in% c("stigmatosoma", "inornata", "particeps") ~ "Culiseta",
