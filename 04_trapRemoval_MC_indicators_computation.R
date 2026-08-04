@@ -10,17 +10,16 @@ folderOutput = "Outputs"
 
 # load data
 totDFmod <- readRDS(file = paste0(folderDataLocal, "/totDFsel_ElDorado_Sepulveda.rds"))
-siteWeeksDF <- readRDS(file = paste0(folderDataLocal, "/siteWeeksDFsel_ElDorado_Sepulveda.rds"))
+trapWeeksDF <- readRDS(file = paste0(folderDataLocal, "/trapWeeksDFsel_ElDorado_Sepulveda.rds"))
 
 # Recompute variables
 species = unique(totDFmod$Species)
 species = species[-which(is.na(species))]
-sites = unique(totDFmod$siteCode)
-#traps = unique(totDFmod$TrapType)
+traps = unique(totDFmod$trap)
 
 # Benchmark definition ----
 # Detection delay
-correctDateDetection = (siteWeeksDF %>%
+correctDateDetection = (trapWeeksDF %>%
                           filter(aegypti > 0) %>%
                           filter(datesLabels == min(datesLabels)) %>%
                           pull(datesLabels))[1]
@@ -29,23 +28,27 @@ correctDateDetection = (siteWeeksDF %>%
 # (number of iterations when mosquito delay is below a given ration, such as 1 year)
 
 # Trend quiquefaciatus
-correctTrend = siteWeeksDF %>%
+correctTrend = trapWeeksDF %>%
   group_by(datesLabels) %>%
   summarise(mqf = mean(quinquefasciatus)) %>%
   ungroup()
 
 # Alpha diversity: Shannon index (is already normalized. Here we consider tyhe whole time series
-
-nV = c(sum(siteWeeksDF$quinquefasciatus), sum(siteWeeksDF$tarsalis), sum(siteWeeksDF$stigmatosoma), sum(siteWeeksDF$aegypti))
+VM = data.matrix(trapWeeksDF[,6:24])
+nV = colSums(VM)
 pV = nV/sum(nV)
 correctShannon = - sum(pV*log2(pV))
 
-# beta diversity: like if there were two different sites.
+# beta diversity: like if there were two different traps.
 # Options : 
 # Morisita–Horn index "two-community generalization of Simpson's index"
 # Bray–Curtis dissimilarity "commonly reported beta-diversity metric in ecology"
 # Jensen–Shannon divergence "information-theoretic analogue, tied to Shannon entropy"
 # Hellinger distance ....
+
+
+# Activity season for specific species (e.g. aedes aegypti, quinquefaciatus)
+# still to do
 
 #let's thake Jensen-Shannon
 # https://medium.com/@vibhorkashyap/understanding-jensen-shannon-distance-a-friendly-guide-for-data-scientists-4cac664c3381
@@ -55,24 +58,24 @@ correctShannon = - sum(pV*log2(pV))
 # Test on categorical distribution (to rethink)
 
 # Exhaustively (too long) ---
-# # delay with 3 site less mechansitc one: very long.
+# # delay with 3 trap less mechansitc one: very long.
 # dateDetection = c()
 # 
 # tic()
-# for(i in 1:length(sites)){
-#   s1 = sites[i]
-#   sites1 = sites[-i]
-#   for(j in 1:length(sites1)){
-#     s2 = sites1[j]
-#     sites2 = sites1[-j]
-#     for(k in 1:length(sites2)){
-#       s3 = sites2[k]
-#       sites3 = sites1[-k]
+# for(i in 1:length(traps)){
+#   s1 = traps[i]
+#   traps1 = traps[-i]
+#   for(j in 1:length(traps1)){
+#     s2 = traps1[j]
+#     traps2 = traps1[-j]
+#     for(k in 1:length(traps2)){
+#       s3 = traps2[k]
+#       traps3 = traps1[-k]
 # 
-#       tempsiteWeeksDF = siteWeeksDF %>%
-#         filter(site %in% sites3)
+#       temptrapWeeksDF = trapWeeksDF %>%
+#         filter(trap %in% traps3)
 # 
-#       dateDetection = c(dateDetection, (tempsiteWeeksDF %>%
+#       dateDetection = c(dateDetection, (temptrapWeeksDF %>%
 #                                           filter(aegypti > 0) %>%
 #                                           filter(datesLabels == min(datesLabels)) %>%
 #                                           pull(datesLabels))[1])
@@ -87,51 +90,51 @@ correctShannon = - sum(pV*log2(pV))
 
 # do it with monte carlo appraoches
 
-# e.g., time we remove 1 < n < n_sites = 36
-nSites = length(sites)-1
+# e.g., time we remove 1 < n < n_traps = 36
+ntraps = length(traps)-1
 nRep = 1000
 
-indicatorDF = data.frame(idrep = rep(1:nRep, nSites),
-                      nRemSites = rep(1:nSites, each = nRep),
+indicatorDF = data.frame(idrep = rep(1:nRep, ntraps),
+                      nRemtraps = rep(1:ntraps, each = nRep),
                       delay = NA,
                       spearmanR = NA,
                       shannon = NA,
                       jensenShannon = NA)
 
 tic()
-for(n in 1:nSites){
+for(n in 1:ntraps){
   for(r in 1:nRep){
-    idr = sample(1:nSites, n)
-    sitesr = sites[-idr]
+    idr = sample(1:ntraps, n)
+    trapsr = traps[-idr]
     
-    tempsiteWeeksDF = siteWeeksDF %>%
-      filter(site %in% sitesr)
+    temptrapWeeksDF = trapWeeksDF %>%
+      filter(trap %in% trapsr)
     
     # trend ----
-    tempsitesQfDF = tempsiteWeeksDF %>%
+    temptrapsQfDF = temptrapWeeksDF %>%
       filter(quinquefasciatus > 0)
     
-    if(nrow(tempsitesQfDF)>0){
-      tempsitesQfDF <- tempsitesQfDF%>%
+    if(nrow(temptrapsQfDF)>0){
+      temptrapsQfDF <- temptrapsQfDF%>%
         group_by(datesLabels) %>%
         summarise(mqf = mean(quinquefasciatus)) %>%
         ungroup() 
       
-      commonProYears = correctTrend$datesLabels %in% tempsitesQfDF$datesLabels
+      commonProYears = correctTrend$datesLabels %in% temptrapsQfDF$datesLabels
       
-      tempR = cor(correctTrend %>% filter(datesLabels %in% tempsitesQfDF$datesLabels) %>% pull(mqf), tempsitesQfDF$mqf,  method = "spearman")
+      tempR = cor(correctTrend %>% filter(datesLabels %in% temptrapsQfDF$datesLabels) %>% pull(mqf), temptrapsQfDF$mqf,  method = "spearman")
     } else {
       tempR  = NA
     }
     
     # delay ----
-    tempsitesAegyptiDF = tempsiteWeeksDF %>%
+    temptrapsAegyptiDF = temptrapWeeksDF %>%
       filter(aegypti > 0)
     
-    if(nrow(tempsitesAegyptiDF) == 0){
+    if(nrow(temptrapsAegyptiDF) == 0){
       dateDetection = NA
     } else {
-      dateDetection = (tempsitesAegyptiDF  %>%
+      dateDetection = (temptrapsAegyptiDF  %>%
                          filter(datesLabels == min(datesLabels)) %>%
                          pull(datesLabels)) [1]
     }
@@ -139,9 +142,10 @@ for(n in 1:nSites){
     weeksDelay = as.numeric((dateDetection-correctDateDetection)/7)
     
     # Alpha biodiversity ---- 
-    nVi = c(sum(tempsiteWeeksDF$quinquefasciatus), sum(tempsiteWeeksDF$tarsalis), sum(tempsiteWeeksDF$stigmatosoma), sum(tempsiteWeeksDF$aegypti))
-    N = sum(nVi) 
-    pVi = nVi/N
+    VM = data.matrix(temptrapWeeksDF[,6:24])
+    nVi = colSums(VM)
+    Ni = sum(nVi) 
+    pVi = nVi/Ni
     tempShannon = - sum(pVi*log2(pVi))
     
     # Beta biodiversity ---- 
@@ -156,27 +160,28 @@ for(n in 1:nSites){
     indicatorDF$shannon[(n-1)*nRep + r] = tempShannon 
     indicatorDF$jensenShannon[(n-1)*nRep + r] = tempJensenShannon
     
-    
   }
+  cat(n, " over ", ntraps, "\n")
 }
-toc() # 4 per 10 sec, 40 sec per 100, 388 per 1000, 7080 per 10000
+toc() # 12 per 10 sec
 
 saveRDS(indicatorDF, file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
+indicatorDF = readRDS(file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
 
 # Plots ----
 
-plot(indicatorDF$nRemSites, indicatorDF$delay)
-plot(indicatorDF$nRemSites, indicatorDF$MDR)
-plot(indicatorDF$nRemSites, indicatorDF$spearmanR)
-plot(indicatorDF$nRemSites, indicatorDF$shannon)
-plot(indicatorDF$nRemSites, indicatorDF$jensenShannon)
-# plot(indicatorDF$nRemSites, indicatorDF$pvalCategorical)
+plot(indicatorDF$nRemtraps, indicatorDF$delay)
+plot(indicatorDF$nRemtraps, indicatorDF$MDR)
+plot(indicatorDF$nRemtraps, indicatorDF$spearmanR)
+plot(indicatorDF$nRemtraps, indicatorDF$shannon)
+plot(indicatorDF$nRemtraps, indicatorDF$jensenShannon)
+# plot(indicatorDF$nRemtraps, indicatorDF$pvalCategorical)
 # to rethink delay (most)
 
 ## Plot delay ----
 
 delayDFmod <- indicatorDF %>%
-  group_by(nRemSites) %>%
+  group_by(nRemtraps) %>%
   summarise(d05 = quantile(delay, 0.05, na.rm = T),
             d25 = quantile(delay, 0.25, na.rm = T),
             d50 = quantile(delay, 0.55, na.rm = T),
@@ -186,7 +191,7 @@ delayDFmod <- indicatorDF %>%
   ungroup()
 
 # delay as a function of removed traps
-ggplot(data = delayDFmod, aes(x = nRemSites, y = dAv)) +
+ggplot(data = delayDFmod, aes(x = nRemtraps, y = dAv)) +
   geom_ribbon(aes(ymin = d05, ymax = d95), alpha = 0.2)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
@@ -197,9 +202,9 @@ ggplot(data = delayDFmod, aes(x = nRemSites, y = dAv)) +
     x = "Number of removed traps", y = "Delay (weeks)"
   ) 
 
-ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay.pdf"), device = "pdf", width = 7, height = 5)
+ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
-# ggplot(data = indicatorDF, aes(x = nRemSites, y = delay, group = nRemSites)) +
+# ggplot(data = indicatorDF, aes(x = nRemtraps, y = delay, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1),
 #         panel.background = element_rect(fill = "white"),
@@ -212,7 +217,7 @@ ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay.pdf"), 
 # MDR for aegypti: detectionw within...
 
 MDRDFmod <- indicatorDF %>%
-  group_by(nRemSites) %>%
+  group_by(nRemtraps) %>%
   summarise(no_delay = 100*sum(delay <= 1, na.rm = T)/nRep, # a month
             within_season_delay = 100*sum(delay <= 13, na.rm = T)/nRep, # a season
             within_year_delay = 100*sum(delay <= 52, na.rm = T)/nRep)%>% # a year
@@ -220,7 +225,7 @@ MDRDFmod <- indicatorDF %>%
 
 MDRDFmodPV = pivot_longer(MDRDFmod, c("no_delay", "within_season_delay", "within_year_delay"), names_to = "delay", values_to = "mdr")
 
-ggplot(data = MDRDFmodPV, aes(x = nRemSites, y = mdr, color = delay)) +
+ggplot(data = MDRDFmodPV, aes(x = nRemtraps, y = mdr, color = delay)) +
   geom_point()+
   geom_line()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
@@ -230,13 +235,13 @@ ggplot(data = MDRDFmodPV, aes(x = nRemSites, y = mdr, color = delay)) +
     title = "Ae. aegypti detection ratio",
     x = "Number of removed traps", y = "% succesful surveillance")
 
-ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection ratio.pdf"), device = "pdf", width = 7, height = 5)
+ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection ratio, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
 ## Plot quinquefaciatus trend ----
 # Spearman is ok but perhaps not informative on the overall dynamics
  
 quiquefaciatusDFmod <-  indicatorDF %>%
-  group_by(nRemSites) %>%
+  group_by(nRemtraps) %>%
   summarise(sr05 = quantile(spearmanR, 0.05, na.rm = T),
             sr25 = quantile(spearmanR, 0.25, na.rm = T),
             sr50 = quantile(spearmanR, 0.55, na.rm = T),
@@ -246,7 +251,7 @@ quiquefaciatusDFmod <-  indicatorDF %>%
   ungroup()
   
 # delay as a function of removed traps
-ggplot(data = quiquefaciatusDFmod, aes(x = nRemSites, y = srAv)) +
+ggplot(data = quiquefaciatusDFmod, aes(x = nRemtraps, y = srAv)) +
   geom_ribbon(aes(ymin = sr05, ymax = sr95), alpha = 0.2)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
@@ -257,9 +262,9 @@ ggplot(data = quiquefaciatusDFmod, aes(x = nRemSites, y = srAv)) +
     x = "Number of removed traps", y = "Spearman's rank r"
   ) 
 
-ggsave(filename = paste0(folderOutput, "/F - correlation with C. quiquefaciatus series.pdf"), device = "pdf", width = 7, height = 5)
+ggsave(filename = paste0(folderOutput, "/F - correlation with C. quiquefaciatus series, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
-# ggplot(data = indicatorDF, aes(x = nRemSites, y = spearmanR, group = nRemSites)) +
+# ggplot(data = indicatorDF, aes(x = nRemtraps, y = spearmanR, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1),
 #         panel.background = element_rect(fill = "white"),
@@ -273,7 +278,7 @@ ggsave(filename = paste0(folderOutput, "/F - correlation with C. quiquefaciatus 
 # Alpha Biodiversity: what to take exactly?  shannon
 
 alphaBiodiversityDFmod <-  indicatorDF %>%
-  group_by(nRemSites) %>%
+  group_by(nRemtraps) %>%
   summarise(s05 = quantile(shannon, 0.05, na.rm = T),
             s25 = quantile(shannon, 0.25, na.rm = T),
             s50 = quantile(shannon, 0.55, na.rm = T),
@@ -283,7 +288,7 @@ alphaBiodiversityDFmod <-  indicatorDF %>%
   ungroup()
 
 # shannon as a function of removed traps
-ggplot(data = alphaBiodiversityDFmod, aes(x = nRemSites, y = sAv)) +
+ggplot(data = alphaBiodiversityDFmod, aes(x = nRemtraps, y = sAv)) +
   geom_ribbon(aes(ymin = s05, ymax = s95), alpha = 0.2)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
@@ -294,9 +299,9 @@ ggplot(data = alphaBiodiversityDFmod, aes(x = nRemSites, y = sAv)) +
     x = "Number of removed traps", y = "Shannon index"
   ) 
 
-ggsave(filename = paste0(folderOutput, "/F - Alpha-biodiversity (Shannon).pdf"), device = "pdf", width = 7, height = 5)
+ggsave(filename = paste0(folderOutput, "/F - Alpha-biodiversity (Shannon), ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
-# ggplot(data = indicatorDF, aes(x = nRemSites, y = shannon, group = nRemSites)) +
+# ggplot(data = indicatorDF, aes(x = nRemtraps, y = shannon, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1),
 #         panel.background = element_rect(fill = "white"),
@@ -312,7 +317,7 @@ ggsave(filename = paste0(folderOutput, "/F - Alpha-biodiversity (Shannon).pdf"),
 # beta Biodiversity:  jensen
 
 betaBiodiversityDFmod <-  indicatorDF %>%
-  group_by(nRemSites) %>%
+  group_by(nRemtraps) %>%
   summarise(js05 = quantile(jensenShannon, 0.05, na.rm = T),
             js25 = quantile(jensenShannon, 0.25, na.rm = T),
             js50 = quantile(jensenShannon, 0.55, na.rm = T),
@@ -322,7 +327,7 @@ betaBiodiversityDFmod <-  indicatorDF %>%
   ungroup()
 
 # js as a function of removed traps
-ggplot(data = betaBiodiversityDFmod, aes(x = nRemSites, y = jsAv)) +
+ggplot(data = betaBiodiversityDFmod, aes(x = nRemtraps, y = jsAv)) +
   geom_ribbon(aes(ymin = js05, ymax = js95), alpha = 0.2)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
@@ -333,9 +338,9 @@ ggplot(data = betaBiodiversityDFmod, aes(x = nRemSites, y = jsAv)) +
     x = "Number of removed traps", y = "Jensen-Shannon divergence"
   ) 
 
-ggsave(filename = paste0(folderOutput, "/F - Beta-biodiversity (Jensen-Shannon).pdf"), device = "pdf", width = 7, height = 5)
+ggsave(filename = paste0(folderOutput, "/F - Beta-biodiversity (Jensen-Shannon), ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
-# ggplot(data = indicatorDF, aes(x = nRemSites, y = jensenShannon, group = nRemSites)) +
+# ggplot(data = indicatorDF, aes(x = nRemtraps, y = jensenShannon, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1),
 #         panel.background = element_rect(fill = "white"),
