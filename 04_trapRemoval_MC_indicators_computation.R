@@ -163,7 +163,7 @@ for(n in 1:ntraps){
   }
   cat(n, " over ", ntraps, "\n")
 }
-toc() # 12 per 10 sec
+toc() # 12 per 10 sec, 1930 per 1000
 
 saveRDS(indicatorDF, file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
 indicatorDF = readRDS(file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
@@ -218,12 +218,12 @@ ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay, ", nRe
 
 MDRDFmod <- indicatorDF %>%
   group_by(nRemtraps) %>%
-  summarise(no_delay = 100*sum(delay <= 1, na.rm = T)/nRep, # a month
-            within_season_delay = 100*sum(delay <= 13, na.rm = T)/nRep, # a season
+  summarise(no_delay = 100*sum(delay == 0, na.rm = T)/nRep, # a month
+            within_month_delay = 100*sum(delay <= 5, na.rm = T)/nRep, # a season
             within_year_delay = 100*sum(delay <= 52, na.rm = T)/nRep)%>% # a year
   ungroup()
 
-MDRDFmodPV = pivot_longer(MDRDFmod, c("no_delay", "within_season_delay", "within_year_delay"), names_to = "delay", values_to = "mdr")
+MDRDFmodPV = pivot_longer(MDRDFmod, c("no_delay", "within_month_delay", "within_year_delay"), names_to = "delay", values_to = "mdr")
 
 ggplot(data = MDRDFmodPV, aes(x = nRemtraps, y = mdr, color = delay)) +
   geom_point()+
