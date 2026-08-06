@@ -91,8 +91,8 @@ correctShannon = - sum(pV*log2(pV))
 # do it with monte carlo appraoches
 
 # e.g., time we remove 1 < n < n_traps = 36
-ntraps = length(traps)-1
-nRep = 1000
+ntraps = length(traps)
+nRep = 100
 
 indicatorDF = data.frame(idrep = rep(1:nRep, ntraps),
                       nRemtraps = rep(1:ntraps, each = nRep),
@@ -120,8 +120,6 @@ for(n in 1:ntraps){
         summarise(mqf = mean(quinquefasciatus)) %>%
         ungroup() 
       
-      commonProYears = correctTrend$datesLabels %in% temptrapsQfDF$datesLabels
-      
       tempR = cor(correctTrend %>% filter(datesLabels %in% temptrapsQfDF$datesLabels) %>% pull(mqf), temptrapsQfDF$mqf,  method = "spearman")
     } else {
       tempR  = NA
@@ -133,20 +131,21 @@ for(n in 1:ntraps){
     
     if(nrow(temptrapsAegyptiDF) == 0){
       dateDetection = NA
+      weeksDelay = Inf
     } else {
       dateDetection = (temptrapsAegyptiDF  %>%
                          filter(datesLabels == min(datesLabels)) %>%
                          pull(datesLabels)) [1]
+      weeksDelay = as.numeric((dateDetection-correctDateDetection)/7)
     }
-    
-    weeksDelay = as.numeric((dateDetection-correctDateDetection)/7)
     
     # Alpha biodiversity ---- 
     VM = data.matrix(temptrapWeeksDF[,6:24])
     nVi = colSums(VM)
+    # remove 0s
     Ni = sum(nVi) 
     pVi = nVi/Ni
-    tempShannon = - sum(pVi*log2(pVi))
+    tempShannon = - sum(pVi[which(nVi>0)]*log2(pVi[which(nVi>0)]))
     
     # Beta biodiversity ---- 
     M = colMeans(rbind(pV, pVi)) 
@@ -163,7 +162,7 @@ for(n in 1:ntraps){
   }
   cat(n, " over ", ntraps, "\n")
 }
-toc() # 12 per 10 sec, 1930 per 1000
+toc() # 12 per 10 sec, 190 per 100, 1930 per 1000
 
 saveRDS(indicatorDF, file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
 indicatorDF = readRDS(file = paste0(folderDataLocal, "/indicatorDF_", nRep, ".rds"))
@@ -219,11 +218,11 @@ ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay, ", nRe
 MDRDFmod <- indicatorDF %>%
   group_by(nRemtraps) %>%
   summarise(no_delay = 100*sum(delay == 0, na.rm = T)/nRep, # a month
-            within_month_delay = 100*sum(delay <= 5, na.rm = T)/nRep, # a season
+            within_season_delay = 100*sum(delay <= 12, na.rm = T)/nRep, # a season
             within_year_delay = 100*sum(delay <= 52, na.rm = T)/nRep)%>% # a year
   ungroup()
 
-MDRDFmodPV = pivot_longer(MDRDFmod, c("no_delay", "within_month_delay", "within_year_delay"), names_to = "delay", values_to = "mdr")
+MDRDFmodPV = pivot_longer(MDRDFmod, c("no_delay", "within_season_delay", "within_year_delay"), names_to = "delay", values_to = "mdr")
 
 ggplot(data = MDRDFmodPV, aes(x = nRemtraps, y = mdr, color = delay)) +
   geom_point()+
