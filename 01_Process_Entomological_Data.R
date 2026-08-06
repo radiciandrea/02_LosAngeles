@@ -1,6 +1,6 @@
 # preprocess entomological observation files
 
-library(xlsx) #4.5
+library(openxlsx) 
 library(pracma)
 library(lubridate)
 library(tidyverse)
@@ -16,14 +16,12 @@ dir.create(folderDataLocal)
 
 #  save data as RDS (once for all)
 tic()
-ElDoradoDF = read.xlsx(file = paste0(folderData, "/El Dorado Park data.xlsx"),
-                       sheetName = "ElDoradoTrapData")
+ElDoradoDF = read.xlsx(xlsxFile = paste0(folderData, "/El Dorado Park data.xlsx"),
+                       sheet = "ElDoradoTrapData")
 toc()
-SepulvedaDF = read.xlsx(file = paste0(folderData, "/Sepulveda Basin data.xlsx"),
-                        sheetName = "SepulvedaTrapData")
+SepulvedaDF = read.xlsx(xlsxFile = paste0(folderData, "/Sepulveda Basin data.xlsx"),
+                        sheet = "SepulvedaTrapData")
 toc()
-
-# read.xlsx is super slow:
 
 # the two tables have the same items (rbind is ok)
 
