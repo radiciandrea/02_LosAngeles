@@ -19,7 +19,7 @@ totDFmod <- totDFmod %>%
   mutate(genusSpecies = paste(Genus, Species))
 
 # trap type
-traps = unique(totDFmod$TrapType)
+trapTypes = unique(totDFmod$TrapType)
 genusSpecies = unique(totDFmod$genusSpecies)
 
 #surveillanceEffort per trap
