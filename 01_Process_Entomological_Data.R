@@ -12,8 +12,10 @@ library(ISOweek)
 folderData = "/Users/mercatmathilde/Desktop/DataUS/Data" # repository Mathilde
 
 folderDataLocal = "Data"
-
+folderOutputslocal = "Outputs"
 dir.create(folderDataLocal)
+dir.create(folderOutputslocal)
+
 # Preprocessing ----
 
 #  save data as RDS (once for all)
