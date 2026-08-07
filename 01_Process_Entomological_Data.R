@@ -7,7 +7,6 @@ library(tidyverse)
 library(ISOweek)
 
 # datafodler
-
 folderData = "C:/Users/2024ar003/Desktop/Alcuni file permanenti/Post_doc_biodivecity/Dati/US_Los_Angeles"
 folderDataLocal = "Data"
 
