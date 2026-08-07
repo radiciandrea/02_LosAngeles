@@ -9,7 +9,7 @@ library(ISOweek)
 # datafodler
 
 #folderData = "C:/Users/2024ar003/Desktop/Alcuni file permanenti/Post_doc_biodivecity/Dati/US_Los_Angeles"  # repository Andrea
-#folderData = "/Users/mercatmathilde/Desktop/DataUS/Data" # repository Mathilde
+folderData = "/Users/mercatmathilde/Desktop/DataUS/Data" # repository Mathilde
 
 folderDataLocal = "Data"
 
@@ -19,10 +19,10 @@ dir.create(folderDataLocal)
 #  save data as RDS (once for all)
 tic()
 ElDoradoDF = read.xlsx(xlsxFile = paste0(folderData, "/El Dorado Park data.xlsx"),
-                       sheet = "ElDoradoTrapData")
+                       sheet = "ElDoradoTrapData", check.names = TRUE)
 toc()
 SepulvedaDF = read.xlsx(xlsxFile = paste0(folderData, "/Sepulveda Basin data.xlsx"),
-                        sheet = "SepulvedaTrapData")
+                        sheet = "SepulvedaTrapData", check.names = TRUE)
 toc()
 
 # the two tables have the same items (rbind is ok)
