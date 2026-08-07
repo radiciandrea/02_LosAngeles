@@ -20,6 +20,7 @@ totDFmod <- totDFmod %>%
 # trap type
 trapTypes = unique(totDFmod$TrapType)
 genusSpecies = unique(totDFmod$genusSpecies)
+traps = unique(totDFmod$trap)
 
 #surveillanceEffort per trap
 trapDF <- totDFmod %>%
@@ -68,14 +69,14 @@ histTotDF <- totDFmod %>%
   mutate(perc = totAbundance/sum(totAbundance)) 
 
 #df correspondence trap-genusSpecies
-correspondenceTrapDF = data.frame(genusSpecies = rep(genusSpecies, times = length(traps)),
-                                  trapType = rep(traps, each = length(genusSpecies)),
+correspondenceTrapDF = data.frame(genusSpecies = rep(genusSpecies, times = length(trapTypes)),
+                                  trapType = rep(trapTypes, each = length(genusSpecies)),
                                   match = "d) absent")
 
 ## loop----
 # histogram of genusSpecies per trap 
 
-for(trapi in traps){
+for(trapi in trapTypes){
   
   cat(trapi, "\n")
   
@@ -85,7 +86,7 @@ for(trapi in traps){
     summarise(totAbundance = sum(AvgAbundance)) %>%
     ungroup() %>%
     mutate(perc = totAbundance/sum(totAbundance)) %>%
-    mutate(percLab = paste0(round(perc, 3), "%"))
+    mutate(percLab = paste0(round(100*perc, 2), "%"))
   
   genusSpeciesi = unique(histDF$genusSpecies)
   
@@ -190,14 +191,14 @@ histTotDF <- totDFmod %>%
   mutate(perc = totAbundance/sum(totAbundance)) 
 
 #df correspondence trap-genusSpecies
-correspondenceTrapDF = data.frame(genusSpecies = rep(genusSpecies, times = length(traps)),
-                                  trapType = rep(traps, each = length(genusSpecies)),
+correspondenceTrapDF = data.frame(genusSpecies = rep(genusSpecies, times = length(trapTypes)),
+                                  trapType = rep(trapTypes, each = length(genusSpecies)),
                                   match = "d) absent")
 
 ## loop----
 # histogram of genusSpecies per trap 
 
-for(trapi in traps){
+for(trapi in trapTypes){
   
   cat(trapi, "\n")
   
@@ -207,7 +208,7 @@ for(trapi in traps){
     summarise(totAbundance = sum(AvgAbundance)) %>%
     ungroup() %>%
     mutate(perc = totAbundance/sum(totAbundance)) %>%
-    mutate(percLab = paste0(round(perc, 3), "%"))
+    mutate(percLab = paste0(round(100*perc, 2), "%"))
   
   genusSpeciesi = unique(histDF$genusSpecies)
   
