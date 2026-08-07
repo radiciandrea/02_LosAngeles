@@ -7,7 +7,10 @@ library(tidyverse)
 library(ISOweek)
 
 # datafodler
-folderData = "C:/Users/2024ar003/Desktop/Alcuni file permanenti/Post_doc_biodivecity/Dati/US_Los_Angeles"
+
+#folderData = "C:/Users/2024ar003/Desktop/Alcuni file permanenti/Post_doc_biodivecity/Dati/US_Los_Angeles"  # repository Andrea
+#folderData = "/Users/mercatmathilde/Desktop/DataUS/Data" # repository Mathilde
+
 folderDataLocal = "Data"
 
 dir.create(folderDataLocal)
