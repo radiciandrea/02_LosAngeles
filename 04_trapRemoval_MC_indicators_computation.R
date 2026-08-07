@@ -114,6 +114,7 @@ correctShannon = - sum(pV*log2(pV))
 
 # do it with monte carlo appraoches
 
+#Monte Carlo Loop setup----
 # e.g., time we remove 1 < n < n_traps = 36
 ntraps = length(traps)
 nRep = 200
@@ -128,6 +129,7 @@ indicatorDF = data.frame(idrep = rep(1:nRep, ntraps),
                       shannon = NA,
                       jensenShannon = NA)
 
+##Loop----
 tic()
 for(n in 1:ntraps){
   for(r in 1:nRep){
