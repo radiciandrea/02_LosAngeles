@@ -1,7 +1,6 @@
 library(sensitivity)
 library(pracma)
 library(tidyverse)
-library(lubridate)
 
 folderDataLocal = "Data"
 folderOutput = "Outputs"

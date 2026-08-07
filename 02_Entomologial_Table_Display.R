@@ -2,7 +2,6 @@
 
 library(pracma)
 library(tidyverse)
-library(lubridate)
 library(ISOweek)
 
 folderDataLocal = "Data"

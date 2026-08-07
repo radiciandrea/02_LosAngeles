@@ -3,7 +3,6 @@
 
 library(pracma)
 library(tidyverse)
-library(lubridate)
 library(Metrics)
 
 folderDataLocal = "Data"

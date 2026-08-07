@@ -6,8 +6,6 @@
 
 library(pracma)
 library(tidyverse)
-library(lubridate)
-library(ggplot2)
 
 folderDataLocal = "Data"
 folderOutput = "Outputs"

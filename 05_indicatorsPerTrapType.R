@@ -3,7 +3,6 @@
 library(pracma)
 library(tidyverse)
 library(lubridate)
-library(ggplot2)
 library(patchwork)
 
 folderDataLocal = "Data"
