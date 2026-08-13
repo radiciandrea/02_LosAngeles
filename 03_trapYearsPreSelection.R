@@ -24,6 +24,9 @@ ggplot(DFsel1, aes(x=year, y=ntraps))+
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))
 
+ggsave(filename = paste0(folderOutput, "/D - Histogram ntraps by year for selection.png"), device = "png", width = 7, height = 5)
+
+
 # let's consider 2023 to 2022
 yearSel = 2003:2022
 
@@ -41,6 +44,8 @@ ggplot(DFsel2, aes(x= reorder(trap, -nweeks), y=nweeks, label = nweeks))+
   theme(axis.text.x = element_text(angle = 90, size = 6),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))
+
+ggsave(filename = paste0(folderOutput, "/D - Histogram traps X nweeks for selection.png"), device = "png", width = 7, height = 5)
 
 # let's consider at least 10 
 
