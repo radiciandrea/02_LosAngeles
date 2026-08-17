@@ -6,6 +6,8 @@ output:
     fig_caption: yes
 header-includes:
   - \usepackage{float}
+bibliography: references.bib
+link-citations: true
 ---
 
 
@@ -37,7 +39,7 @@ In this report we present preliminary exploration of the LA dataset. We present 
 Starting in the late 80s, the dataset includes 161 traps of 6 types (BGSENT, CO2, GRVD, NJLT, USDS, OTHER?) accross 81 sites (trap location) in 2 areas (Sepulveda and Eldorado).
 Figure \@ref(fig:ActiveSurveillance) shows, until 2004 only 3 traps NJLT type were set up (2 in Sepulva and 1 in Eldorado). Then, we observe lot of variation in the number of trap set up.  
 --> All trap do not have the same number of monitor weeks.  
---> Increase of monitoring after 2003 related to **WNV first detection in California in 2003** (*Reisen and al. 2004*).  
+--> Increase of monitoring after 2003 related to **WNV first detection in California in 2003** [@reisen_west_2004].  
 --> Since 2010 decrease of monitoring effort.  
 
 ```{r ActiveSurveillance, fig.cap="Active surveillance by trap (1 trap is 1 trap type and 1 location) per week in Eldorado (top) and Sepulveda (bottom). Each blue line represents a week during which the trap was active", out.width="80%", echo=FALSE, fig.pos = "H", fig.align="center"}
@@ -96,10 +98,10 @@ knitr::include_graphics("Outputs/A - Histogram.png")
 ```
 
   
-## Type of trap impact on specie ##
+## Type of trap impact on species ##
 
 Trap performance to capture mosquitoes vary depending on species.
-Concerning the *Cx. quinquefasciatus* (except other) only NJLT capture less *Cx. quinquefasciatus* than average. *Is NJLT trap less efficient to capture Cx. quiquefasciatus?*
+Concerning the *Cx. quinquefasciatus* (except other) only NJLT capture less *Cx. quinquefasciatus* than average. NJLT trap is less efficient to capture *Cx. quiquefasciatus* [@reisen_comparative_1999]. 
 According to the figure it seems that we get the general trend with only CO2 and NJLT trap (except for *Ae. notoscriptus* capture only once).
 "Other" type trap only catch *Ae. aegypti* is it Human-landing catch ? 
 Figure \@ref(CorrespondenceTable) show that long old series NJLT trap do not capture a lot of Cx. quiquefasciatus. 
@@ -181,4 +183,8 @@ knitr::include_graphics("Outputs/G - Shapley value, Ae. aegypti detection delay,
 ```
 
 
+# References
+
+::: {#refs}
+:::
 
