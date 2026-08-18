@@ -208,17 +208,29 @@ ShapleyDF = readRDS(file = paste0(folderDataLocal, "/ShapleyDF_", nPerm, ".rds")
 
 trapType_ShapleyDF = ShapleyDF %>%
  group_by(trapType) %>%
- summarise(shapleyDelay = mean(shapleyDelay),
-   shapleyR = mean(shapleyR),
-   shapleyPeakError = mean(shapleyPeakError),
-   shapleySeasonStartError = mean(shapleySeasonStartError),
-   shapleySeasonEndError = mean(shapleySeasonEndError),
-   shapleyShannon = mean(shapleyShannon))%>%
+ summarise(shapleyMeanDelay = mean(shapleyDelay),
+   shapleyMeanR = mean(shapleyR),
+   shapleyMeanPeakError = mean(shapleyPeakError),
+   shapleyMeanSeasonStartError = mean(shapleySeasonStartError),
+   shapleyMeanSeasonEndError = mean(shapleySeasonEndError),
+   shapleyMeanShannon = mean(shapleyShannon),
+   shapley05Delay = quantile(shapleyDelay, 0.05),
+   shapley05R = quantile(shapleyR, 0.05),
+   shapley05PeakError = quantile(shapleyPeakError, 0.05),
+   shapley05SeasonStartError = quantile(shapleySeasonStartError, 0.05),
+   shapley05SeasonEndError = quantile(shapleySeasonEndError, 0.05),
+   shapley05Shannon = quantile(shapleyShannon, 0.05),
+   shapley95Delay = quantile(shapleyDelay, 0.95),
+   shapley95R = quantile(shapleyR, 0.95),
+   shapley95PeakError = quantile(shapleyPeakError, 0.95),
+   shapley95SeasonStartError = quantile(shapleySeasonStartError, 0.95),
+   shapley95SeasonEndError = quantile(shapleySeasonEndError, 0.95),
+   shapley95Shannon = quantile(shapleyShannon, 0.95))%>%
  ungroup()
 
 # Plots----
 
-## Early Ae. aegipty detection----
+## Early Ae. aegypti detection----
 ggplot(ShapleyDF, aes(x = reorder(trap, shapleyDelay), y = shapleyDelay, fill = trapType))+
  geom_col()+
  labs(title = "Importance of traps in Ae. aegypti detection", y = "Per-trap Shapley value (delay in weeks)", x = "trap")+
@@ -228,9 +240,10 @@ ggplot(ShapleyDF, aes(x = reorder(trap, shapleyDelay), y = shapleyDelay, fill = 
 
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, Ae. aegypti detection delay, ", nPerm, " reps, per trap.png"), device = "png", width = 10, height = 5)
 
-#per Trap type
-ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleyDelay), y = shapleyDelay, fill = trapType))+
+#per Trap type + error
+ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleyMeanDelay), y = shapleyMeanDelay, fill = trapType))+
  geom_col()+
+ geom_errorbar(aes(ymin = shapley05Delay, ymax = shapley95Delay)) +
  labs(title = "Importance of trap type in Ae. aegypti detection", y = "Per-type average Shapley value (delay in weeks)", x = "trap")+
  theme(axis.text.x = element_text(angle = 90, hjust = 1),
   panel.background = element_rect(fill = "white"),
@@ -249,8 +262,9 @@ ggplot(ShapleyDF, aes(x = reorder(trap, -shapleyShannon), y = shapleyShannon, fi
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, Shannon index, ", nPerm, " reps, per trap.png"), device = "png", width = 10, height = 5)
 
 #per Trap type
-ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, -shapleyShannon), y = shapleyShannon, fill = trapType))+
+ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, -shapleyMeanShannon), y = shapleyMeanShannon, fill = trapType))+
   geom_col()+
+  geom_errorbar(aes(ymin = shapley05Shannon, ymax = shapley95Shannon)) +
   labs(title = "Importance of trap type in determining Shannon index", y = "Per-type average Shapley value (rmse)", x = "trap")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
@@ -269,8 +283,9 @@ ggplot(ShapleyDF, aes(x = reorder(trap, -shapleyR), y = shapleyR, fill = trapTyp
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, C. quinquefasciatus trend, ", nPerm, " reps, per trap.png"), device = "png", width = 10, height = 5)
 
 #per Trap type
-ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, -shapleyR), y = shapleyR, fill = trapType))+
+ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, -shapleyMeanR), y = shapleyMeanR, fill = trapType))+
  geom_col()+
+  geom_errorbar(aes(ymin = shapley05R, ymax = shapley95R)) +
  labs(title = "Importance of trap type in C. quinquefasciatus trend", y = "Per-type average Shapley value (Spearman's r)", x = "trap")+
  theme(axis.text.x = element_text(angle = 90, hjust = 1),
   panel.background = element_rect(fill = "white"),
@@ -289,8 +304,9 @@ ggplot(ShapleyDF, aes(x = reorder(trap, shapleyPeakError), y = shapleyPeakError,
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, C. quinquefasciatus seasonal peak, ", nPerm, " reps, per trap.png"), device = "png", width = 10, height = 5)
 
 #per Trap type
-ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleyPeakError), y = shapleyPeakError, fill = trapType))+
+ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleyMeanPeakError), y = shapleyMeanPeakError, fill = trapType))+
  geom_col()+
+ geom_errorbar(aes(ymin = shapley05PeakError, ymax = shapley95PeakError)) +
  labs(title = "Importance of trap type in C. quinquefasciatus seasonal peak", y = "Per-type average Shapley value (rmse)", x = "trap")+
  theme(axis.text.x = element_text(angle = 90, hjust = 1),
   panel.background = element_rect(fill = "white"),
@@ -309,8 +325,9 @@ ggplot(ShapleyDF, aes(x = reorder(trap, shapleySeasonStartError), y = shapleySea
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, C. quinquefasciatus seasonal start, ", nPerm, " reps, per trap.png"), device = "png", width = 10, height = 5)
 
 #per Trap type
-ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleySeasonStartError), y = shapleySeasonStartError, fill = trapType))+
+ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleyMeanSeasonStartError), y = shapleyMeanSeasonStartError, fill = trapType))+
   geom_col()+
+  geom_errorbar(aes(ymin = shapley05SeasonStartError, ymax = shapley95SeasonStartError)) +
   labs(title = "Importance of trap type in C. quinquefasciatus seasonal peak", y = "Per-type average Shapley value (rmse)", x = "trap")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
@@ -329,8 +346,9 @@ ggplot(ShapleyDF, aes(x = reorder(trap, shapleySeasonEndError), y = shapleySeaso
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, C. quinquefasciatus seasonal end, ", nPerm, " reps, per trap.png"), device = "png", width = 10, height = 5)
 
 #per Trap type
-ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleySeasonEndError), y = shapleySeasonEndError, fill = trapType))+
+ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleyMeanSeasonEndError), y = shapleyMeanSeasonEndError, fill = trapType))+
   geom_col()+
+  geom_errorbar(aes(ymin = shapley05SeasonEndError, ymax = shapley95SeasonEndError)) +
   labs(title = "Importance of trap type in C. quinquefasciatus seasonal peak", y = "Per-type average Shapley value (rmse)", x = "trap")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
