@@ -120,9 +120,11 @@ Different methods can be used to evaluate surveillance efficacy. To do so we nee
 - Culex quinqufasciatus dynamic : general trend, start season, end season
 - Aedes aegypti : delay in first detection
 
-## Trap importance using the Shapley index **
+## Trap importance using the Shapley index 
 
-Blabla sur l'indice
+To estimate the importance of each trap (indivually and by trap type) we used the Shapley value. It come from game theory and allow to compute each player (trap) contribution to the outcome (performance). It calculates each player's average marginal contribution across all possible coalitions. 
+Here we present a Monte Carlo adpted version of it (otherwise, it would take way too long) with 1000 permutations.
+
 
 ### Impact on alpha diversity (Shanon) ###
 
@@ -181,6 +183,13 @@ knitr::include_graphics("Outputs/G - Shapley value, Ae. aegypti detection delay,
 knitr::include_graphics("Outputs/G - Shapley value, Ae. aegypti detection delay, 1000 reps, per trap type.png")
 
 ```
+
+# Question :
+
+## Before 2004 surveillance 
+Before 2004 what was the aim of the surveillance using NJLT ? 
+I found in [@reisen_comparative_1999] *"Originally, light traps were deployed to monitor Cx. tarsalis abundance in relation to enzootic virus transmission activity"*.
+
 
 
 # References
