@@ -115,7 +115,7 @@ knitr::include_graphics("Outputs/A - Correspondence table.png")
 # Surveillance efficacy (minimal trapping effort, sentinel trap ...) #
 
 **Due to a significant change in the monitoring method and the use of only one trap type before 2004, the rest of the analysis will use only data from 2004 to 2022 (Figure  \@ref(fig:NtrapsYear))**.  
-Different methods can be used to evaluate surveillance efficacy. To do so we need first to choose indacator on which we will evaluate the performance :
+Different methods can be used to evaluate surveillance efficacy. To do so we need first to choose indacator on which we will evaluate the performance. We drew inspiration from a study in New Orleans who has been evaluating different types of traps for monitoring mosquitoes over several years [@scavo_mosquito_2026]. 
 - Shanon : alpha diversity
 - Culex quinqufasciatus dynamic : general trend, start season, end season
 - Aedes aegypti : delay in first detection
@@ -184,11 +184,21 @@ knitr::include_graphics("Outputs/G - Shapley value, Ae. aegypti detection delay,
 
 ```
 
-# Question :
+# Perspetives / question :
+
+## Up date 
+
+Is it possible do get a update of the data until end of 2025 ? or up to date ?
 
 ## Before 2004 surveillance 
-Before 2004 what was the aim of the surveillance using NJLT ? 
-I found in [@reisen_comparative_1999] *"Originally, light traps were deployed to monitor Cx. tarsalis abundance in relation to enzootic virus transmission activity"*.
+
+Before 2004 surveillance was very different using only one type of trap NJLT. I found in [@reisen_comparative_1999] : *"Originally, light traps were deployed to monitor Cx. tarsalis abundance in relation to enzootic virus transmission activity"*. What can we do with data before 2004 ? 
+
+## Urban green space and vectors
+
+We need adidional data to do so. In previous meeting we discuss about data from two additional site : Harbor Lake – Control/ Non-Green (NEW) and Valley Urban – Control/Non-Green
+
+
 
 
 
