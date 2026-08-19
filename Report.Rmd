@@ -1,6 +1,6 @@
 ---
 title: "Report_Los_Angeles_Data"
-author: "Mercat Mathilde & Radici Andrea"
+author: "Radici Andrea & Mercat Mathilde"
 output:
   bookdown::pdf_document2:
     fig_caption: yes
@@ -105,13 +105,12 @@ knitr::include_graphics("Outputs/A - Correspondence table.png")
 **Due to a significant change in the monitoring method and the use of only one trap type before 2004, the rest of the analysis will use only data from 2004 to 2022 (Figure  \@ref(fig:NtrapsYear))**.  
 Different methods can be used to evaluate surveillance efficacy. To do so we need first to choose indacator on which we will evaluate the performance. We drew inspiration from a study in New Orleans who has been evaluating different types of traps for monitoring mosquitoes over several years [@scavo_mosquito_2026]. 
 - Shanon : alpha diversity. 
-- Culex quinqufasciatus dynamic : general trend, start season, end season. 
+- Culex quinqufasciatus dynamic : general trend, start season. 
 - Aedes aegypti : delay in first detection. 
 
-MC indicators
+**MC indicators** : boostraped indicators : repetition with randomized sampling to see how much the number of trap impact the output. 
 
-To estimate the importance of each trap (indivually and by trap type) we used the Shapley value. It come from game theory and allow to compute each player (trap) contribution to the outcome (performance). It calculates each player's average marginal contribution across all possible coalitions. 
-Here we present a Monte Carlo adpted version of it (otherwise, it would take way too long) with 10000 permutations.
+**Shapley value** : to estimate the importance of each trap (indivually and by trap type) we used the Shapley value. It come from game theory and allow to compute each player (trap) contribution to the outcome (performance). It calculates each player's average marginal contribution across all possible coalitions.  Here we present a Monte Carlo adpted version of it (otherwise, it would take way too long) with 10000 permutations.
 
 
 ## Impact on alpha diversity (Shanon). 
