@@ -270,6 +270,23 @@ ggplot(data = delayDFmod, aes(x = nRemtraps, y = dAv)) +
 
 ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
+
+# Change in x-axis to have the number of trap (croissant) instead of removed
+
+ggplot(data = delayDFmod, aes(x = nTraps-nRemtraps, y = dAv)) +
+  geom_ribbon(aes(ymin = d05, ymax = d95), alpha = 0.2)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  geom_point()+
+  labs(
+    title = "Delay in the detection of Ae. aegypti",
+    x = paste0("Number of traps"), y = "Delay (weeks)"
+  ) 
+
+ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection delay, x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
 # ggplot(data = indicatorDF, aes(x = nRemtraps, y = delay, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1),
@@ -303,6 +320,21 @@ ggplot(data = MDRDFmodPV, aes(x = nRemtraps, y = mdr, color = delay)) +
 
 ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection ratio, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
+# Change in x-axis to have the number of trap (croissant) instead of removed
+
+ggplot(data = MDRDFmodPV, aes(x = nTraps-nRemtraps, y = mdr, color = delay)) +
+  geom_point()+
+  geom_line()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  labs(
+    title = "Ae. aegypti detection ratio",
+    x = paste0("Number of traps"), y = "% succesful surveillance")
+
+ggsave(filename = paste0(folderOutput, "/F - Ae. aegypti detection ratio, x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
 ## Plot quinquefaciatus trend ----
 # Spearman is ok but perhaps not informative on the overall dynamics
  
@@ -329,6 +361,24 @@ ggplot(data = quinquefasciatusTrendDFmod, aes(x = nRemtraps, y = srAv)) +
   ) 
 
 ggsave(filename = paste0(folderOutput, "/F - correlation with C. quinquefasciatus series, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
+# Change in x-axis to have the number of trap (croissant) instead of removed
+
+ggplot(data = quinquefasciatusTrendDFmod, aes(x = nTraps-nRemtraps, y = srAv)) +
+  geom_ribbon(aes(ymin = sr05, ymax = sr95), alpha = 0.2)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  geom_point()+
+  labs(
+    title = "Correlation (Spearman) with complete C. quinquefasciatus observations",
+    x = paste0("Number of traps"), y = "Spearman's rank r"
+  ) 
+
+ggsave(filename = paste0(folderOutput, "/F - correlation with C. quinquefasciatus series, x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
 
 # ggplot(data = indicatorDF, aes(x = nRemtraps, y = spearmanR, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
@@ -367,6 +417,23 @@ ggplot(data = quinquefasciatusPeakDFmod, aes(x = nRemtraps, y = peAv)) +
 ggsave(filename = paste0(folderOutput, "/F - RMSE C. quinquefasciatus peak, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
 
+# Change in x-axis to have the number of trap (croissant) instead of removed
+ggplot(data = quinquefasciatusPeakDFmod, aes(x = nTraps-nRemtraps, y = peAv)) +
+  geom_ribbon(aes(ymin = pe05, ymax = pe95), alpha = 0.2)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  geom_point()+
+  labs(
+    title = "Error in C. quinquefasciatus seasonal peak date",
+    x = paste0("Number of traps"), y = "RMSE"
+  ) 
+
+ggsave(filename = paste0(folderOutput, "/F - RMSE C. quinquefasciatus peak, x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
+
+
 ## Plot season start Error----
 
 quinquefasciatusStartDFmod <-  indicatorDF %>%
@@ -392,6 +459,21 @@ ggplot(data = quinquefasciatusStartDFmod, aes(x = nRemtraps, y = seAv)) +
   ) 
 
 ggsave(filename = paste0(folderOutput, "/F - RMSE C. quinquefasciatus season start, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+# Change in x-axis to have the number of trap (croissant) instead of removed
+
+ggplot(data = quinquefasciatusStartDFmod, aes(x = nTraps-nRemtraps, y = seAv)) +
+  geom_ribbon(aes(ymin = se05, ymax = se95), alpha = 0.2)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  geom_point()+
+  labs(
+    title = "Error in C. quinquefasciatus seasonal start date",
+    x = paste0("Number of traps"), y = "RMSE"
+  ) 
+
+ggsave(filename = paste0(folderOutput, "/F - RMSE C. quinquefasciatus season start, x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
 
 ## Plot season end Error----
@@ -420,6 +502,22 @@ ggplot(data = quinquefasciatusEndDFmod, aes(x = nRemtraps, y = eeAv)) +
 
 ggsave(filename = paste0(folderOutput, "/F - RMSE C. quinquefasciatus season End, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
 
+# Change in x-axis to have the number of trap (croissant) instead of removed
+
+ggplot(data = quinquefasciatusEndDFmod, aes(x = nTraps-nRemtraps, y = eeAv)) +
+  geom_ribbon(aes(ymin = ee05, ymax = ee95), alpha = 0.2)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  geom_point()+
+  labs(
+    title = "Error  C. quinquefasciatus seasonal End date",
+    x = paste0("Number of traps"), y = "RMSE"
+  ) 
+
+ggsave(filename = paste0(folderOutput, "/F - RMSE C. quinquefasciatus season End, x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
 
 ## Plot shannon----
 # Alpha Biodiversity: what to take exactly?  shannon
@@ -447,6 +545,24 @@ ggplot(data = alphaBiodiversityDFmod, aes(x = nRemtraps, y = sAv)) +
   ) 
 
 ggsave(filename = paste0(folderOutput, "/F - Alpha-biodiversity (Shannon), ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
+# Change in x-axis to have the number of trap (croissant) instead of removed
+
+ggplot(data = alphaBiodiversityDFmod, aes(x = nTraps-nRemtraps, y = sAv)) +
+  geom_ribbon(aes(ymin = s05, ymax = s95), alpha = 0.2)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  geom_point()+
+  labs(
+    title = "Apparent alpha-biodiversity",
+    x = paste0("Number of traps"), y = "Shannon index"
+  ) 
+
+ggsave(filename = paste0(folderOutput, "/F - Alpha-biodiversity (Shannon), x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
 
 # ggplot(data = indicatorDF, aes(x = nRemtraps, y = shannon, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
@@ -485,6 +601,23 @@ ggplot(data = betaBiodiversityDFmod, aes(x = nRemtraps, y = jsAv)) +
     x = paste0("Number of removed traps, out of ", ntraps), y = "Jensen-Shannon divergence") 
 
 ggsave(filename = paste0(folderOutput, "/F - Beta-biodiversity (Jensen-Shannon), ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
+# Change in x-axis to have the number of trap (croissant) instead of removed
+
+ggplot(data = betaBiodiversityDFmod, aes(x = nTraps-nRemtraps, y = jsAv)) +
+  geom_ribbon(aes(ymin = js05, ymax = js95), alpha = 0.2)+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))+
+  geom_point()+
+  labs(
+    title = "Apparent beta-biodiversity",
+    x = paste0("Number of traps"), y = "Jensen-Shannon divergence") 
+
+ggsave(filename = paste0(folderOutput, "/F - Beta-biodiversity (Jensen-Shannon), x-axis nTraps, ", nRep, " reps.png"), device = "png", width = 7, height = 5)
+
+
 
 # ggplot(data = indicatorDF, aes(x = nRemtraps, y = jensenShannon, group = nRemtraps)) +
 #   geom_boxplot(fill = "gray70")+
