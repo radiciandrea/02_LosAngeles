@@ -146,14 +146,11 @@ For **Culex quinquefasciatus** we look at the estimation of :
 
 #### Impact of number of trap on *Cx. quinquefasciatus* trend (MC). 
 
-A rediscuter avec ANdrea sur la figure a choisir
+A rediscuter avec Andrea sur la figure a choisir. 
 
-```{r culextrendMC, fig.cap="Impact of number of trap on Cx. quinquefasciatus trend.", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
-
-
-```
 
 #### Impact of trap type on *Cx. quinquefasciatus* trend (Shapley value). 
+
 
 ```{r culextrendShapley, fig.cap="Importance of trap (left) and trap type (right) to determine Cx. quinquefasciatus trend using Shapley Index and MC (10000 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
@@ -162,6 +159,7 @@ knitr::include_graphics("Outputs/G - Shapley value, C. quinquefasciatus trend, 1
 knitr::include_graphics("Outputs/G - Shapley value, C. quinquefasciatus trend, 10000 reps, per trap type.png")
 
 ```
+
 
 ### Impact *Cx. quinquefasciatus* season start. 
 
@@ -216,7 +214,7 @@ knitr::include_graphics("Outputs/G - Shapley value, Ae. aegypti detection delay,
 
 - Do we observe same tendancy in different location (same results with a different dataset)? 
 
-- Before 2004 surveillance was very different using only one type of trap NJLT. I found in [@reisen_comparative_1999] : *"Originally, light traps were deployed to monitor Cx. tarsalis abundance in relation to enzootic virus transmission activity"*. What can we do with data before 2004 ? 
+- Before 2004 surveillance was very different using only one type of trap NJLT. I found in [@reisen_comparative_1999] : *"Originally, light traps were deployed to monitor Cx. tarsalis abundance in relation to enzootic virus transmission activity"*. Do we have specific question with data before 2004-  What can we do with data before 2004 ? 
 
 -  Performance index and species of interest : so far, we focus on Shanon diversity index, *Cx quiquefasciatus* dynamic and *Ae. aedypti* detection 
 We need to discuss species of interest and performance index that can be used. We can think of eveness for example.
