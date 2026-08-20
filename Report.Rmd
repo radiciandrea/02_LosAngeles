@@ -23,13 +23,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction #
 
-This report presents a preliminary exploration of the LA dataset. We conduct various analyses to evaluate surveillance efficacy and the minimal effort required, using the Sepulveda and Eldorado datasets.
+This report presents a preliminary exploration of the LA entomological dataset. We conduct various statistical analyses to evaluate different indicators measuring (a) the surveillance efficacy and (b) the minimal effort required to reach given surveillance benchmarks, using data from the Sepulveda and Eldorado areas.
 
 # Dataset description #
 
 ## Surveillance effort ##
 
-Starting in the late 1988, the dataset includes 161 traps of 6 types (BGSENT, CO2, GRVD, NJLT, USDS, OTHER?) distributed accross 81 sites (trap location) in 2 areas (Sepulveda and Eldorado). Each Trap_ID corresponds to one location and one type of trap. 
+Starting in the late 1988, the dataset includes 161 traps of 6 types (BGSENT, CO2, GRVD, NJLT, USDS, OTHER?) distributed across 81 sites (trap location) in 2 areas (Sepulveda and Eldorado). Each Trap_ID corresponds to one location and one type of trap. 
 Figure \@ref(fig:ActiveSurveillance) illustrates that, until 2004, only 3 NJLT-type traps were set up (2 in *Sepulveda* and 1 in *Eldorado*). Thereafter, significant variation in the number of traps deployed is observed. 
 
 Key observations include:  
@@ -49,7 +49,7 @@ knitr::include_graphics("Outputs/B - ActiveSurveillance.png")
 
 ### Surveillance effort over years ###
 
-Surveillance efforts have varied over the years and across areas (Figure \@ref(fig:ActiveWeekSurveillance)). The highest surveillance effort occurred around 2005, followed by a decline. Early-season monitoring decreased significantly after 2011, with almost no traps deployed before mid-May in recent years. Since 2005, the number of monitored weeks has been higher in Sepulveda than in Eldorado. 
+Surveillance efforts have varied over the years and across areas (Figure \@ref(fig:ActiveWeekSurveillance)). The peak in surveillance effort occurred around 2005, followed by a decline. In particular, early-season monitoring decreased significantly after 2011, with almost no traps deployed before mid-May in recent years. Since 2005, the number of monitored weeks has been higher in Sepulveda than in Eldorado. 
 
 ```{r ActiveWeekSurveillance, fig.cap="Number of weeks with at least one active trap all year around (top), for early season from january to mid may (middle), for late season after mid october (bottom), over monitored weeks", out.width="60%", echo=FALSE, fig.pos = "H", fig.align="center"}
 
@@ -57,9 +57,9 @@ knitr::include_graphics("Outputs/B - ActiveWeekSurveillance.png")
 
 ```
 
-Figure \@ref(fig:NtrapsYear) shows that the number of traps (each representing a unique location and trap type) set up at least once per year varies significantly, with a sharp increase after 2004. Some traps have been deployed consistently for years, while others have been set up only sporadically (Figure \@ref(fig:NtrapsYear)). 
+Figure \@ref(fig:NtrapsYear) shows that the number of traps (each representing a unique location and trap type, weighted in terms of active weeks per year) set up varies significantly, with a sharp increase after 2004. Some traps have been deployed consistently for years, while others have been set up only sporadically (Figure \@ref(fig:NtrapsYear)b). 
 
-```{r NtrapsYear, fig.cap="Number of trap set up at least once by year (right) and Number of weeks monitored by each trap (left).",  out.width="45%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
+```{r NtrapsYear, fig.cap= "Number of traps set up, weighted in terms of active weeks per year (left) and Number of weeks monitored by each trap (right).",  out.width="45%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
 knitr::include_graphics("Outputs/D - Histogram ntraps by year for selection.png")
 knitr::include_graphics("Outputs/D - Histogram traps X nweeks for selection.png")
@@ -68,10 +68,10 @@ knitr::include_graphics("Outputs/D - Histogram traps X nweeks for selection.png"
 
 ### Surveillance effort by trap type ###
 
-The different types of traps are not used consistently (Figure \@ref(fig:TrappingEffort)). The NJLT trap, deployed in only three locations, was the sole trap type used until 2004 and thus accounted for the highest effort (measured in trap-nights).
+The different types of traps have not been deployed homogeneously across the monitored period (Figure \@ref(fig:TrappingEffort)). The NJLT trap, deployed in only three locations, was the sole trap type used until 2004 and thus accounted for the highest effort (measured in trap-nights).
 After 2004, CO2 and GRVD traps became the main types, deployed across many different locations. In contrast, USDS and BGSENT traps have been used only sporadically.
 
-```{r TrappingEffort, fig.cap="Trapping effort by type of Trap with number of location by trap type (left), number of weeks recorded by trap type (middle) and the total number of trap nights by trap type (right)", out.width="50%", echo=FALSE, fig.pos = "H", fig.align="center"}
+```{r TrappingEffort, fig.cap="Trapping effort by type of Trap with number of locations by trap type (left), number of weeks recorded by trap type (middle) and the total number of trapped nights by trap type (right)", out.width="50%", echo=FALSE, fig.pos = "H", fig.align="center"}
 
 knitr::include_graphics("Outputs/A - Trapping effort.png")
 
@@ -80,7 +80,8 @@ knitr::include_graphics("Outputs/A - Trapping effort.png")
 
 ## Mosquito Diversity ##
 
-19 different species has been identified, with *Cx. quiquefasciatus* representing 93% of the total mosquitoes sample (Figure \@ref(fig:HistogramSpecies)).
+19 different species has been identified, belonging to 5 genus (*Aedes*, *Anopheles*, *Culex*, *Culiseta*, *Orthopodomyia*), with *Cx. quinquefasciatus* representing 93% of the total mosquito sample (Figure \@ref(fig:HistogramSpecies)). Some of them have been observed only in specific periods, such as *Cx pipiens* (up to 2005) or *Ae. aegypti* (after 2017).
+Others, such as *Ae. notoscriptus* or *Ae. increpitus*, have been observed only once. 
 
 ```{r HistogramSpecies, fig.cap="Proportion of moquitoes species from 1988 to 2022", out.width="50%", echo=FALSE, fig.pos = "H", fig.align="center"}
 
@@ -93,8 +94,8 @@ knitr::include_graphics("Outputs/A - Histogram.png")
 
 Trap performance for capturing mosquitoes varies depending on species (Figure \@ref(fig:CorrespondenceTable) ). 
 Regarding *Cx. quinquefasciatus* only the NJLT trap captures fewer *Cx. quinquefasciatus* than average. This trap type is known to be less efficient at capturing *Cx. quinquefasciatus* [@reisen_comparative_1999]. 
-According to the figure, it seems that we observe the general trend only with the CO2 and NJLT traps (except for *Ae. notoscriptus*, captured only once by GRVD).
-The "Other" type trap only catches Ae. aegypti — is it a Human-Landing Catch?
+According to the figure, it seems that we can observe the general trend only with the CO2 and NJLT traps (except for *Ae. notoscriptus*, captured only once by GRVD).
+The "Other" type trap only catches *Ae. aegypti* — is it a Human-Landing Catch?
 
 ```{r CorrespondenceTable, fig.cap="Detection of mosquito species by trap type", out.width="80%", echo=FALSE, fig.pos = "H", fig.align="center"}
 
@@ -106,31 +107,32 @@ knitr::include_graphics("Outputs/A - Correspondence table.png")
 
 **Due to a significant change in the monitoring method and the use of only one trap type before 2004, the subsequent analyses are restricted to data from 2004 to 2022 (Figure \@ref(fig:NtrapsYear))**. 
 
-To evaluate surveillance efficacy we fisrt select indicators on which we will evaluate the performance of the surveillance and then try different method of evalutation.
+To evaluate surveillance efficacy we first select indicators on which we will evaluate the performance of the surveillance and then test different methods of evaluation.
+
 Different methods can be used to evaluate surveillance efficacy. We drew inspiration from a study in New Orleans who has been evaluating different types of traps for monitoring mosquitoes over several years [@scavo_mosquito_2026]. 
 
-Performances indicators :  
+Performances indicators:  
 
-- Diversity : alpha-diversity (Shanon) and apparent beta-diversity (Jensen-Shanon). 
+- Biodiversity: (1) alpha-diversity (Shannon) and (2) apparent beta-diversity (Jensen-Shannon). 
 
-- *Culex quinqufasciatus* dynamic : general trend and start season. 
+- *Culex quinqufasciatus* dynamic:  (3) general trend and (4) seasonal activity start. 
 
-- *Aedes aegypti* : delay in first detection. 
+- *Aedes aegypti*: (5) delay in the first detection and (6) relative number of traps detecting the mosquito within a given delay (MDR - mosquito detection ratio). 
 
-Method of evaluation :
+Method of evaluation:
 
-1) **MC indicators** : Using boostraped classical methods : mean value with 5th–95th Percentile Distribution range (Alpha and beta diversity, *Aedes aegypti* : delay in first detection), Spearman correlation rank (*Culex quinqufasciatus* general trend), RMSE (*Culex quinqufasciatus* error in start season). We then just compute 200 randomization by radomly sampling a number a trap to evaluate the impact of the number of traps on the performances indcators. 
+1) **Information loss indicators**, using boostrapped classical methods: we assess how the information degrades by randomly removing an increasing set of trap, regardless of the type and location. The information we refer to is the performance indicators computed on the whole database. Therefore, we show the mean value with 5th–95th Percentile Distribution range for Alpha and Beta diversity, *Aedes aegypti*, delay in first detection, Spearman correlation with the *Culex quinqufasciatus* general trend, and error (RMSE) in start season for the same species. We then just sample N random permutations (so far, N = 200, but up to 10000 is computationally feasible within 1 day) of dimension 1, 2 ... M-1 (M being the total number of traps)  to evaluate the impact of the number of traps on the performances indicators. 
 
-2) **Shapley value** : to estimate the importance of each trap (indivually and by trap type) we used the Shapley value. It come from game theory and allow to compute each player (trap) contribution to the outcome (performance). It calculates each player's average marginal contribution across all possible coalitions. Here we present a Monte Carlo adapted version of it (otherwise, it would take way too long) with 10000 permutations.
+2) **Shapley value**: to estimate the importance of each trap (individually and by trap type) we used the Shapley value. The Shapley value comes from game theory, and is based on an algorithm that allows to measure each player (trap) contribution to the outcome (performance). This algorithm calculates each player's average marginal contribution across all possible coalitions of players in a team (deployed traps) by considering the difference of the outcome with and without that player. Here, we present a Monte Carlo adapted version of it (otherwise, it would be computationally unfeasible) with 10000 permutations.
 
 
-## Impact on alpha diversity (Shanon). 
+## Impact on alpha diversity (Shannon). 
 
-Shanon value is relativly low indicating a low diversity. 
+Shannon value is relatively close to 0.44, indicating a low diversity (which we expexted, given the predominace of *Cx. quinquefasciatus*. By increasing the number of traps, we get a more precise estimation of the Shannon index. The width of the 0.05 - 0.95 percentile interval decreases sharply up to ~12 traps, than it decrease almost linearly.
 
 ### Impact of number of trap on alpha diversity (MC indicators). 
 
-```{r ShannonMC, fig.cap="Impact of the number of trap on Shanon index with in grey the 5th–95th Percentile Distribution Range (MC : 200 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
+```{r ShannonMC, fig.cap="Impact of the number of trap on Shannon index with in grey the 5th–95th Percentile Distribution Range (MC: 200 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
 
 knitr::include_graphics("Outputs/F - Alpha-biodiversity (Shannon), x-axis nTraps, 200 reps.png")
@@ -139,7 +141,7 @@ knitr::include_graphics("Outputs/F - Alpha-biodiversity (Shannon), x-axis nTraps
 
 ### Impact of trap type on alpha diversity (Shapley value). 
 
-Figure \@ref(fig:ShannonShapley) illustrates NJLT, BGSENT and CO2 have the main immportance to estimate Shannon diversity index.
+Figure \@ref(fig:ShannonShapley) illustrates how NJLT, BGSENT and CO2 are the trap types mostly increasing the Shannon diversity index.
 
 ```{r ShannonShapley, fig.cap="Importance of trap (left) and trap type (right) to determine Shannon index using Shapley Index and MC (10000 reps). Black bar represent the 5th–95th Percentile Distribution Range.", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
@@ -149,12 +151,15 @@ knitr::include_graphics("Outputs/G - Shapley value, Shannon index, 10000 reps, p
 
 ```
 
-## Impact on beta diversity (Jensen-Shanon). 
+## Impact on beta diversity (Jensen-Shannon). 
+
+The Jensen-Shannon index is usually computed to measure how the communities of the ecosystems differs. Here, We can use this information for measuring how distant is the true community species composition (using the whole set of traps) from the apparent one we would have from a reduced set of traps.
 
 ### Impact of number of trap on alpha diversity (MC indicators). 
 
 
-```{r jensenNtraps, fig.cap="Impact of the number of trap on Jensen-Shanon index with in grey the 5th–95th Percentile Distribution Range.", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
+
+```{r jensenNtraps, fig.cap="Impact of the number of trap on Jensen-Shannon index with in grey the 5th–95th Percentile Distribution Range.", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
 
 knitr::include_graphics("Outputs/F - Beta-biodiversity (Jensen-Shannon), x-axis nTraps, 200 reps.png")
@@ -162,26 +167,32 @@ knitr::include_graphics("Outputs/F - Beta-biodiversity (Jensen-Shannon), x-axis 
 ```
 
 
-## Impact on *Cx. quinquefasciatus*. 
+## Impact on *Cx. quinquefasciatus* dynamics. 
 
-For **Culex quinquefasciatus** we look at the estimation of :  
+For **Culex quinquefasciatus** we look at the estimation of:  
 
-- general trend : mean abundance of *Cx. quiquefasciatus* by week considering all trap type. 
+- general trend: mean abundance of *Cx. quinquefasciatus* by week,
 
-- season start. 
+- season start by year, 
+
+considering all traps vs a reduced set of traps.
 
 
 ### Impact *Cx. quinquefasciatus* trend. 
 
 #### Impact of number of trap on *Cx. quinquefasciatus* trend (Spearman-MC). 
 
-```{r culextrendMC, fig.cap="Importance of number of trap to determine Cx. quinquefasciatus trend using Spearman correlation (MC : 200 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
+Already 10 traps help having a quite precise idea of the overall trend for this species (the lowest boundary of the 0.05 - 0.95 interval is larger than 0.5).
+
+```{r culextrendMC, fig.cap="Importance of number of trap to determine Cx. quinquefasciatus trend using Spearman correlation (MC: 200 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
 
 knitr::include_graphics("Outputs/F - correlation with C. quinquefasciatus series, x-axis nTraps, 200 reps.png")
 ```
 
 #### Impact of trap type on *Cx. quinquefasciatus* trend (Shapley value). 
+
+All traps helps in describing the long term trend of this species, with GRVD being the most important. By contrast, despite a positive average value, USDS traps display very large variations.
 
 
 ```{r culextrendShapley, fig.cap="Importance of trap (left) and trap type (right) to determine Cx. quinquefasciatus trend using Shapley Index and MC (10000 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
@@ -197,6 +208,9 @@ knitr::include_graphics("Outputs/G - Shapley value, C. quinquefasciatus trend, 1
 
 #### Impact of number of trap on *Cx. quinquefasciatus* season start (MC). 
 
+Beginning of the season is very sensitive to the reduced trapping effort before may. The RMSE error (number of weeks) is ~ 2 weeks even with 40 traps.
+
+
 ```{r culexstartMC, fig.cap="Impact of number of trap on Cx. quinquefasciatus start season.", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
 knitr::include_graphics("Outputs/F - RMSE C. quinquefasciatus season start, x-axis nTraps, 200 reps.png")
@@ -204,6 +218,8 @@ knitr::include_graphics("Outputs/F - RMSE C. quinquefasciatus season start, x-ax
 ```
 
 #### Impact of trap type on *Cx. quinquefasciatus* season start  (Shapley value). 
+
+For this indicator on seasonal activity, we get similar conclusions as for the trend.
 
 ```{r culexstart, fig.cap="Importance of trap (left) and trap type (right) to determine Cx. quinquefasciatus season start using using Shapley Index and MC (10000 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
@@ -218,6 +234,8 @@ knitr::include_graphics("Outputs/G - Shapley value, C. quinquefasciatus seasonal
 
 ### Impact on numbers of traps of *Ae. aegypti* delay detection. 
 
+Since only few traps got this species, avarage delays for random sets of trap with 10 traps or less are infinite (firure on the left). In this case, it is more interesting to look at the MDR indicator (figure on the right). With 15 traps, this species is always observed within a year of delay from its "true" first appeareance; with the same trap set size, the probability of observing this species within one season decrease to 63%, and to 42% if less than one week is required.
+
 
 ```{r aegyptiMC, fig.cap="Impact of the number of trap used on delay of detection in weeks of Ae. aegypti (right), and on the % of sucessfull surveillance with detection within the month (no delay), within the season (in 12 weeks), or within the year (52 weeks) (left).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
@@ -226,10 +244,9 @@ knitr::include_graphics("Outputs/F - Ae. aegypti detection delay, x-axis nTraps,
 knitr::include_graphics("Outputs/F - Ae. aegypti detection ratio, x-axis nTraps, 200 reps.png")
 ```
 
-### Shapley value : Impact on trap type on *Ae. aegypti* delay detection. 
+### Shapley value: Impact on trap type on *Ae. aegypti* delay detection. 
 
-
-It is important to note that NJLT and USDS trap do not capture any *Ae. Aegypti* (Figure  \@ref(fig:CorrespondenceTable) ). 
+GRVD traps performed the best to capture this species. It is important to note that NJLT and USDS trap do not capture any *Ae. Aegypti* (Figure  \@ref(fig:CorrespondenceTable) ). 
 
 ```{r aegyptiShapley, fig.cap="Importance of trap (left) and trap type (right) on Ae. aegypti first detection using Shapley Index and MC (10000 reps).", out.width="40%", echo=FALSE, fig.pos = "H", fig.align="center", fig.show="hold", fig.layout="column"}
 
@@ -240,24 +257,24 @@ knitr::include_graphics("Outputs/G - Shapley value, Ae. aegypti detection delay,
 ```
 
 
-# Perspetives  :
+# Perspetives :
 
-- Explore the impact of trap location (spatial).
+- Explore the impact of trap location (spatial) in addition to trap type (e.g. in the green area, at the border, outside the green area)
 - Explore the differences between the two areas. 
-- Explore more what has been done in [@scavo_mosquito_2026]. 
-
+- Explore more what has been done in [@scavo_mosquito_2026] as for specific indicators. 
 
 # Questions 
 
-- Is it possible to get a update of the data until the end of 2025 ?
+- Is it possible to get a update of the data until the end of 2025?
 
-- Can we get other datasets from different areas in order to :
-  - see if we observe same trend in different locations (same results with a different dataset)?  
-  - study the impact of urban green space on vectors. In previous meeting we discussed data from two additional areas : Harbor Lake – Control/ Non-Green (NEW) and Valley Urban – Control/Non-Green. 
+- Can we access to data from different areas in order to:
+  - check if we observe same trends in different locations (which would imply narrow impact of position within the city)?  
+  - in general, study the impact of different urban landscapes, in particular of urban green space, on vectors. 
+  In previous meeting we discussed data from two additional areas: Harbor Lake – Control/ Non-Green (NEW) and Valley Urban – Control/Non-Green. 
 
-- Before 2004 surveillance was very different using only one type of trap, the NJLT. I found in [@reisen_comparative_1999] : *"Originally, light traps were deployed to monitor Cx. tarsalis abundance in relation to enzootic virus transmission activity"*. Do we have specific research question involving data before 2004 ?
+- Before 2004, surveillance was very different using only one type of trap, the NJLT. I found in [@reisen_comparative_1999]: *"Originally, light traps were deployed to monitor Cx. tarsalis abundance in relation to enzootic virus transmission activity"*. Do we have specific research questions involving data before 2004?
 
--  Performance index and species of interest : so far, we have focused on Shannon diversity index, Shannon-Jensen index, *Cx quiquefasciatus* dynamic and *Ae. aegypti* early detection. 
+-  Performance indices and species of interest: so far, we have focused on Shannon diversity index, Shannon-Jensen index, *Cx quinquefasciatus* trend and seasonal dynamics, and *Ae. aegypti* early detection. 
 We need to discuss **species of interest** and **performance index(es)** that can be used.
 
 - The "Other" type trap only catches Ae. aegypti — is it a Human-Landing Catch?
