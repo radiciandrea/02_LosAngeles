@@ -152,8 +152,14 @@ indicatorFun <- function(ti = traps){
  pVi = nVi/Ni
  tempShannon = - sum(pVi[which(nVi>0)]*log2(pVi[which(nVi>0)]))
  
+ # Beta biodiversity
+ M = colMeans(rbind(pV, pVi)) 
+ KLD_PQ = sum(ifelse(pV >0, pV*log(pV/M), 0)) # Kullback–Leibler divergence, one side
+ KLD_QP = sum(ifelse(pVi >0, pVi*log(pVi/M), 0)) # Kullback–Leibler divergence, other side
+ tempJensenShannon = 0.5*KLD_PQ + 0.5*KLD_QP
  
- return(c(weeksDelay, tempR, tempPeakDateError, tempSeasonStartError, tempSeasonEndError, tempShannon))
+ 
+ return(c(weeksDelay, tempR, tempPeakDateError, tempSeasonStartError, tempSeasonEndError, tempShannon, tempJensenShannon))
 }
 
 # Shapley value attribution setup---
@@ -164,6 +170,7 @@ contribPeakError <- matrix(0, nPerm, nTraps)
 contribSeasonStartError <- matrix(0, nPerm, nTraps)
 contribSeasonEndError <- matrix(0, nPerm, nTraps)
 contribShannon <- matrix(0, nPerm, nTraps)
+contribJensenShannon <- matrix(0, nPerm, nTraps)
 
 tic()
 #Shapley value attribution loop----
@@ -181,6 +188,7 @@ for (p in seq_len(nPerm)) {
  contribSeasonStartError[p, j] <- new_val[4] - prev_val[4]
  contribSeasonEndError[p, j] <- new_val[5] - prev_val[5]
  contribShannon[p, j] <- new_val[6] - prev_val[6]
+ contribJensenShannon[p, j] <- new_val[7] - prev_val[7]
  
  prev_val <- new_val
  }
@@ -198,7 +206,8 @@ ShapleyDF = data.frame(trap = traps,
       shapleyPeakError = colMeans(contribPeakError, na.rm = T),
       shapleySeasonStartError = colMeans(contribSeasonStartError, na.rm = T),
       shapleySeasonEndError = colMeans(contribSeasonEndError, na.rm = T),
-      shapleyShannon = colMeans(contribShannon, na.rm = T))
+      shapleyShannon = colMeans(contribShannon, na.rm = T),
+      shapleyJensenShannon = colMeans(contribJensenShannon, na.rm = T))
 
 saveRDS(ShapleyDF, file = paste0(folderDataLocal, "/ShapleyDF_", nPerm, ".rds"))
 
@@ -214,18 +223,21 @@ trapType_ShapleyDF = ShapleyDF %>%
    shapleyMeanSeasonStartError = mean(shapleySeasonStartError),
    shapleyMeanSeasonEndError = mean(shapleySeasonEndError),
    shapleyMeanShannon = mean(shapleyShannon),
+   shapleyMeanJensenShannon = mean(shapleyJensenShannon),
    shapley05Delay = quantile(shapleyDelay, 0.05),
    shapley05R = quantile(shapleyR, 0.05),
    shapley05PeakError = quantile(shapleyPeakError, 0.05),
    shapley05SeasonStartError = quantile(shapleySeasonStartError, 0.05),
    shapley05SeasonEndError = quantile(shapleySeasonEndError, 0.05),
    shapley05Shannon = quantile(shapleyShannon, 0.05),
+   shapley05JensenShannon = quantile(shapleyJensenShannon, 0.05),
    shapley95Delay = quantile(shapleyDelay, 0.95),
    shapley95R = quantile(shapleyR, 0.95),
    shapley95PeakError = quantile(shapleyPeakError, 0.95),
    shapley95SeasonStartError = quantile(shapleySeasonStartError, 0.95),
    shapley95SeasonEndError = quantile(shapleySeasonEndError, 0.95),
-   shapley95Shannon = quantile(shapleyShannon, 0.95))%>%
+   shapley95Shannon = quantile(shapleyShannon, 0.95),
+   shapley95JensenShannon = quantile(shapleyJensenShannon, 0.95))%>%
  ungroup()
 
 # Plots----
@@ -251,7 +263,7 @@ ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, shapleyMeanDelay), y = shap
 
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, Ae. aegypti detection delay, ", nPerm, " reps, per trap type.png"), device = "png", width = 5, height = 5)
 
-## Biodiversity (Shannon)----
+## Biodiversity (alpha: Shannon)----
 ggplot(ShapleyDF, aes(x = reorder(trap, -shapleyShannon), y = shapleyShannon, fill = trapType))+
   geom_col()+
   labs(title = "Importance of traps in determining Shannon index", y = "Per-trap Shapley value (rmse)", x = "trap")+
@@ -265,12 +277,34 @@ ggsave(filename = paste0(folderOutput, "/G - Shapley value, Shannon index, ", nP
 ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, -shapleyMeanShannon), y = shapleyMeanShannon, fill = trapType))+
   geom_col()+
   geom_errorbar(aes(ymin = shapley05Shannon, ymax = shapley95Shannon)) +
-  labs(title = "Importance of trap type in determining Shannon index", y = "Per-type average Shapley value (rmse)", x = "trap")+
+  labs(title = "Importance of trap type in determining Shannon index", y = "Per-type average Shapley value", x = "trap")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_rect(fill = "white"),
         panel.grid = element_line(color = "gray90"))
 
 ggsave(filename = paste0(folderOutput, "/G - Shapley value, Shannon index, ", nPerm, " reps, per trap type.png"), device = "png", width = 5, height = 5)
+
+## Biodiversity (beta: Jensen-Shannon)----
+ggplot(ShapleyDF, aes(x = reorder(trap, -shapleyJensenShannon), y = shapleyJensenShannon, fill = trapType))+
+  geom_col()+
+  labs(title = "Importance of traps in determining Jensen-Shannon index", y = "Per-trap Jensen-Shapley value", x = "trap")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))
+
+ggsave(filename = paste0(folderOutput, "/G - Shapley value, Jensen-Shannon index, ", nPerm, " reps, per trap.png"), device = "png", width = 10, height = 5)
+
+#per Trap type
+ggplot(trapType_ShapleyDF, aes(x = reorder(trapType, -shapleyMeanJensenShannon), y = shapleyMeanJensenShannon, fill = trapType))+
+  geom_col()+
+  geom_errorbar(aes(ymin = shapley05JensenShannon, ymax = shapley95JensenShannon)) +
+  labs(title = "Importance of trap type in determining Jensen-Shannon index", y = "Per-type average Shapley value", x = "trap")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        panel.grid = element_line(color = "gray90"))
+
+ggsave(filename = paste0(folderOutput, "/G - Shapley value, Jensen-Shannon index, ", nPerm, " reps, per trap type.png"), device = "png", width = 5, height = 5)
+
 
 ## C. quinquefasciatus correct trend----
 ggplot(ShapleyDF, aes(x = reorder(trap, -shapleyR), y = shapleyR, fill = trapType))+
